@@ -1,0 +1,10 @@
+{"type":"server-started","port":63699,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:63699","screen_dir":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content","state_dir":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/state"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/welcome.html"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/tech-approach.html"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/navigation.html"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/store-card.html"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/design-screens.html"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/home-options.html"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/home-settings-final.html"}
+{"type":"screen-added","file":"/Users/mimi/Documents/SPARKNOTES/.superpowers/brainstorm/89615-1782126950/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

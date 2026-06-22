@@ -1,0 +1,65 @@
+<h2>選擇技術方案</h2>
+<p class="subtitle">三個方向，各有取捨</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>React Native + Expo ⭐ 推薦</h3>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>優點</h4><ul>
+          <li>TypeScript / JavaScript，學習曲線低</li>
+          <li>Expo SDK 內建 GPS、通知、相機 API</li>
+          <li>一份程式碼跑 iOS + Android</li>
+          <li>生態系成熟，社群龐大</li>
+        </ul></div>
+        <div class="cons"><h4>缺點</h4><ul>
+          <li>效能略遜於 Flutter（一般應用感受不到）</li>
+          <li>背景定位需 expo-task-manager，設定稍複雜</li>
+        </ul></div>
+      </div>
+      <div style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);">
+        <strong>主要套件：</strong> Expo SDK 52、React Native 0.76、expo-location、expo-notifications、expo-sqlite、react-navigation v7
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Flutter</h3>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>優點</h4><ul>
+          <li>效能接近原生，UI 一致性高</li>
+          <li>自帶豐富 Widget，視覺效果精美</li>
+          <li>Dart 語言型別系統嚴格</li>
+        </ul></div>
+        <div class="cons"><h4>缺點</h4><ul>
+          <li>需學 Dart 語言</li>
+          <li>App 包體積偏大</li>
+          <li>背景定位 plugin 生態不如 Expo 完整</li>
+        </ul></div>
+      </div>
+      <div style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);">
+        <strong>主要套件：</strong> Flutter 3.27、geolocator、flutter_local_notifications、sqflite、go_router
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>原生 (Swift + Kotlin)</h3>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>優點</h4><ul>
+          <li>最佳效能與系統整合</li>
+          <li>背景定位功能最完整</li>
+        </ul></div>
+        <div class="cons"><h4>缺點</h4><ul>
+          <li>需維護兩份程式碼（iOS / Android）</li>
+          <li>開發時間 2 倍以上</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</div>

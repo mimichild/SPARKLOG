@@ -1,0 +1,86 @@
+<h2>導覽結構</h2>
+<p class="subtitle">首頁 + 三個分頁，怎麼排列？</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>底部 3 分頁 + 頂部標題列 ⭐ 推薦</h3>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;">首頁就是 Tab 1，標題與設定在頂部導航列</p>
+      <div class="mockup">
+        <div class="mockup-header">SPARKNOTES</div>
+        <div class="mockup-body" style="padding:0;">
+          <!-- Top header -->
+          <div style="background:#1a1a2e;color:#eee;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+            <span style="font-weight:600;">📒 SPARKNOTES</span>
+            <span>⚙️ 設定</span>
+          </div>
+          <!-- Content area -->
+          <div style="padding:12px;min-height:120px;background:#0f0f23;">
+            <div style="font-size:0.8rem;color:#888;margin-bottom:8px;">最新記錄</div>
+            <div style="background:#1e1e3a;border-radius:8px;padding:10px;margin-bottom:6px;font-size:0.8rem;color:#ccc;">
+              ☕ 路易莎咖啡 — ⭐⭐⭐⭐⭐
+            </div>
+            <div style="background:#1e1e3a;border-radius:8px;padding:10px;font-size:0.8rem;color:#ccc;">
+              🍜 某拉麵店 — ⭐
+            </div>
+            <div style="text-align:right;margin-top:8px;">
+              <span style="background:#6c63ff;color:#fff;border-radius:20px;padding:6px 14px;font-size:0.8rem;">＋ 新增店家</span>
+            </div>
+          </div>
+          <!-- Bottom tab bar -->
+          <div style="background:#1a1a2e;display:flex;border-top:1px solid #333;">
+            <div style="flex:1;padding:8px 4px;text-align:center;font-size:0.7rem;color:#6c63ff;border-top:2px solid #6c63ff;">
+              <div>📝</div><div>最新</div>
+            </div>
+            <div style="flex:1;padding:8px 4px;text-align:center;font-size:0.7rem;color:#666;">
+              <div>📂</div><div>分類</div>
+            </div>
+            <div style="flex:1;padding:8px 4px;text-align:center;font-size:0.7rem;color:#666;">
+              <div>🏆</div><div>排行榜</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>獨立首頁 → 底部 3 分頁</h3>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;">開啟 APP 先看首頁（歡迎＋統計），再點進各分頁</p>
+      <div class="split">
+        <div class="mockup">
+          <div class="mockup-header">首頁</div>
+          <div class="mockup-body" style="padding:0;background:#0f0f23;">
+            <div style="padding:16px;text-align:center;">
+              <div style="font-size:1.5rem;margin-bottom:4px;">📒</div>
+              <div style="color:#eee;font-weight:600;font-size:1rem;">SPARKNOTES</div>
+              <div style="color:#888;font-size:0.75rem;margin-top:12px;">共記錄 42 家店</div>
+              <div style="display:flex;justify-content:center;gap:12px;margin-top:12px;">
+                <div style="background:#1e1e3a;border-radius:8px;padding:8px 12px;font-size:0.75rem;color:#6c63ff;">⭐⭐⭐⭐⭐ ×15</div>
+                <div style="background:#1e1e3a;border-radius:8px;padding:8px 12px;font-size:0.75rem;color:#ff6b6b;">⭐ ×8</div>
+              </div>
+              <div style="margin-top:12px;background:#1e1e3a;border-radius:8px;padding:8px;font-size:0.75rem;color:#888;">⚙️ 設定</div>
+            </div>
+          </div>
+        </div>
+        <div class="mockup">
+          <div class="mockup-header">進入後 → 3 分頁</div>
+          <div class="mockup-body" style="padding:0;background:#0f0f23;">
+            <div style="background:#1a1a2e;display:flex;border-bottom:1px solid #333;">
+              <div style="flex:1;padding:8px 4px;text-align:center;font-size:0.7rem;color:#6c63ff;border-bottom:2px solid #6c63ff;">📝 最新</div>
+              <div style="flex:1;padding:8px 4px;text-align:center;font-size:0.7rem;color:#666;">📂 分類</div>
+              <div style="flex:1;padding:8px 4px;text-align:center;font-size:0.7rem;color:#666;">🏆 排行</div>
+            </div>
+            <div style="padding:12px;min-height:120px;">
+              <div style="background:#1e1e3a;border-radius:8px;padding:10px;margin-bottom:6px;font-size:0.8rem;color:#ccc;">☕ 路易莎咖啡 ⭐⭐⭐⭐⭐</div>
+              <div style="background:#1e1e3a;border-radius:8px;padding:10px;font-size:0.8rem;color:#ccc;">🍜 某拉麵店 ⭐</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

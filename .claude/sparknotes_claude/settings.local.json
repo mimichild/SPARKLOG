@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash *)",
+      "Bash(npx create-expo-app@latest *)",
+      "Read(//Users/mimi/Documents/**)",
+      "Bash(mv SPARKNOTES/docs /tmp/sparknotes_docs)",
+      "Bash(mv SPARKNOTES/.claude /tmp/sparknotes_claude)",
+      "Bash(mv SPARKNOTES/.superpowers /tmp/sparknotes_superpowers)",
+      "Bash(mv SPARKNOTES/.DS_Store /tmp/sparknotes_DS_Store)"
+    ]
+  }
+}

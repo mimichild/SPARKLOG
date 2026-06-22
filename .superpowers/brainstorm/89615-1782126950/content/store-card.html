@@ -1,0 +1,100 @@
+<h2>店家卡片樣式</h2>
+<p class="subtitle">在「最新」、「分類」、「排行榜」三頁都會用到這個卡片</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>橫排簡潔型 ⭐ 推薦</h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">資訊一目了然，列表滾動順暢</p>
+      <div style="background:#111827;border-radius:12px;overflow:hidden;max-width:360px;">
+        <!-- Card 1 -->
+        <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #1f2937;gap:12px;">
+          <div style="width:44px;height:44px;background:#1e3a5f;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">☕</div>
+          <div style="flex:1;min-width:0;">
+            <div style="color:#f3f4f6;font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">路易莎咖啡 信義店</div>
+            <div style="color:#9ca3af;font-size:0.75rem;margin-top:2px;">咖啡廳 · 台北市信義區</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
+            <div style="color:#fbbf24;font-size:0.85rem;">★★★★★</div>
+            <div style="color:#6b7280;font-size:0.7rem;">2天前</div>
+          </div>
+        </div>
+        <!-- Card 2 (bad store) -->
+        <div style="display:flex;align-items:center;padding:12px 14px;gap:12px;">
+          <div style="width:44px;height:44px;background:#3f1f1f;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🍜</div>
+          <div style="flex:1;min-width:0;">
+            <div style="color:#f3f4f6;font-weight:600;font-size:0.9rem;">某知名拉麵店</div>
+            <div style="color:#9ca3af;font-size:0.75rem;margin-top:2px;">餐廳 · 台北市大安區</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
+            <div style="color:#ef4444;font-size:0.85rem;">★☆☆☆☆</div>
+            <div style="color:#6b7280;font-size:0.7rem;">1週前</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>大卡片型（含照片）</h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">視覺豐富，適合有照片的店家；無照片時略顯空洞</p>
+      <div style="display:flex;gap:10px;max-width:360px;">
+        <!-- Card 1 -->
+        <div style="background:#111827;border-radius:12px;overflow:hidden;flex:1;">
+          <div style="height:80px;background:linear-gradient(135deg,#1e3a5f,#2d1b69);display:flex;align-items:center;justify-content:center;font-size:2rem;">☕</div>
+          <div style="padding:10px;">
+            <div style="color:#f3f4f6;font-weight:600;font-size:0.85rem;">路易莎咖啡</div>
+            <div style="color:#9ca3af;font-size:0.72rem;">咖啡廳</div>
+            <div style="color:#fbbf24;font-size:0.8rem;margin-top:4px;">★★★★★</div>
+          </div>
+        </div>
+        <!-- Card 2 -->
+        <div style="background:#111827;border-radius:12px;overflow:hidden;flex:1;">
+          <div style="height:80px;background:linear-gradient(135deg,#3f1f1f,#4a1f1f);display:flex;align-items:center;justify-content:center;font-size:2rem;">🍜</div>
+          <div style="padding:10px;">
+            <div style="color:#f3f4f6;font-weight:600;font-size:0.85rem;">某拉麵店</div>
+            <div style="color:#9ca3af;font-size:0.72rem;">餐廳</div>
+            <div style="color:#ef4444;font-size:0.8rem;margin-top:4px;">★☆☆☆☆</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>混合型：橫排 + 左側色條</h3>
+      <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;">用左側色條快速區分好店（綠）與雷店（紅）</p>
+      <div style="background:#111827;border-radius:12px;overflow:hidden;max-width:360px;">
+        <!-- Card 1 - good -->
+        <div style="display:flex;align-items:center;border-bottom:1px solid #1f2937;">
+          <div style="width:4px;align-self:stretch;background:#22c55e;border-radius:4px 0 0 4px;flex-shrink:0;"></div>
+          <div style="display:flex;align-items:center;padding:12px 14px;gap:12px;flex:1;">
+            <div style="width:40px;height:40px;background:#1e3a5f;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">☕</div>
+            <div style="flex:1;">
+              <div style="color:#f3f4f6;font-weight:600;font-size:0.88rem;">路易莎咖啡</div>
+              <div style="color:#9ca3af;font-size:0.72rem;">咖啡廳 · 信義區</div>
+            </div>
+            <div style="color:#fbbf24;font-size:0.82rem;">★★★★★</div>
+          </div>
+        </div>
+        <!-- Card 2 - bad -->
+        <div style="display:flex;align-items:center;">
+          <div style="width:4px;align-self:stretch;background:#ef4444;border-radius:4px 0 0 4px;flex-shrink:0;"></div>
+          <div style="display:flex;align-items:center;padding:12px 14px;gap:12px;flex:1;">
+            <div style="width:40px;height:40px;background:#3f1f1f;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🍜</div>
+            <div style="flex:1;">
+              <div style="color:#f3f4f6;font-weight:600;font-size:0.88rem;">某拉麵店</div>
+              <div style="color:#9ca3af;font-size:0.72rem;">餐廳 · 大安區</div>
+            </div>
+            <div style="color:#ef4444;font-size:0.82rem;">★☆☆☆☆</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
