@@ -7,7 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SPARKNOTES 需要定位來記錄店家位置。",
+        "NSLocationAlwaysUsageDescription": "SPARKNOTES 需要持續定位來在接近雷店時發出警示。"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +28,16 @@
     "plugins": [
       "expo-sqlite",
       "expo-secure-store",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "SPARKNOTES 需要持續存取位置，以便在接近雷店時發出警示通知。",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      ["expo-notifications", { "icon": "./assets/icon.png", "color": "#6c63ff" }],
+      "expo-task-manager"
     ]
   }
 }
