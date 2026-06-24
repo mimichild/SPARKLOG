@@ -38,6 +38,7 @@ export async function getStoresByCategory(categoryId: string, order: 'desc' | 'a
 }
 
 export async function getStoresFiltered(ratings: number[], categoryIds: string[]): Promise<Store[]> {
+  if (ratings.length === 0) return [];
   const db = await getDb();
   const rPlaceholders = ratings.map(() => '?').join(',');
   const params: any[] = [...ratings];
@@ -84,4 +85,9 @@ export async function updateStore(id: string, data: Omit<Store, 'id' | 'createdA
 export async function deleteStore(id: string): Promise<void> {
   const db = await getDb();
   await db.runAsync('DELETE FROM stores WHERE id = ?', [id]);
+}
+
+export async function deleteAllStores(): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM stores');
 }

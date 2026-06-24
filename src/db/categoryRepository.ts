@@ -48,3 +48,8 @@ export async function deleteCategory(id: string): Promise<void> {
   const db = await getDb();
   await db.runAsync('DELETE FROM categories WHERE id = ?', [id]);
 }
+
+export async function deleteAllCategories(): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM categories');
+}

@@ -6,8 +6,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSettingsStore } from '@/store/settingsStore';
-import { getAllStores, insertStore } from '@/db/storeRepository';
-import { getAllCategories, insertCategory } from '@/db/categoryRepository';
+import { getAllStores, insertStore, deleteAllStores } from '@/db/storeRepository';
+import { getAllCategories, insertCategory, deleteAllCategories } from '@/db/categoryRepository';
 import { serializeBackup, parseBackup } from '@/utils/exportImport';
 
 const PRESET_COLORS = ['#6c63ff', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899'];
@@ -43,12 +43,33 @@ export default function SettingsScreen() {
     if (result.canceled) return;
     const json = await FileSystem.readAsStringAsync(result.assets[0].uri);
     const { stores, categories } = parseBackup(json);
+
+    const importCategoriesAndStores = async () => {
+      const idMap: Record<string, string> = {};
+      for (const c of categories) {
+        const inserted = await insertCategory(c.name, c.emoji);
+        idMap[c.id] = inserted.id;
+      }
+      for (const s of stores) {
+        const { id: _id, createdAt: _createdAt, ...rest } = s;
+        const mappedCategoryId = idMap[s.categoryId] ?? s.categoryId;
+        await insertStore({ ...rest, categoryId: mappedCategoryId });
+      }
+    };
+
     Alert.alert('匯入資料', '要合併還是覆蓋現有資料？', [
       { text: '取消', style: 'cancel' },
       {
         text: '合併', onPress: async () => {
-          for (const c of categories) await insertCategory(c.name, c.emoji);
-          for (const s of stores) await insertStore(s);
+          await importCategoriesAndStores();
+          Alert.alert('匯入完成');
+        },
+      },
+      {
+        text: '覆蓋', style: 'destructive', onPress: async () => {
+          await deleteAllStores();
+          await deleteAllCategories();
+          await importCategoriesAndStores();
           Alert.alert('匯入完成');
         },
       },
