@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import type { Store, Category } from '@/types';
 import { getStoresFiltered } from '@/db/storeRepository';
 import { getAllCategories } from '@/db/categoryRepository';
@@ -41,7 +42,7 @@ export default function RankingsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.replace('/')}>
-          <Text style={styles.back}>← 返回首頁</Text>
+          <Text style={styles.back}>← 返回</Text>
         </TouchableOpacity>
         <Text style={styles.title}>排行</Text>
         <View style={{ width: 60 }} />
@@ -51,10 +52,17 @@ export default function RankingsScreen() {
         {ALL_RATINGS.map((n) => (
           <TouchableOpacity
             key={n}
-            style={[styles.chip, selectedRatings.includes(n) && { backgroundColor: themeColor }]}
+            style={[styles.chip, styles.heartChip, selectedRatings.includes(n) && { backgroundColor: themeColor }]}
             onPress={() => toggleRating(n)}
           >
-            <Text style={[styles.chipText, selectedRatings.includes(n) && styles.chipTextActive]}>{'♥'.repeat(n)}</Text>
+            {Array.from({ length: n }).map((_, i) => (
+              <Ionicons
+                key={i}
+                name="heart"
+                size={13}
+                color={selectedRatings.includes(n) ? '#ffffff' : themeColor}
+              />
+            ))}
           </TouchableOpacity>
         ))}
       </View>
@@ -105,6 +113,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9', borderRadius: 8,
     paddingVertical: 6, paddingHorizontal: 12, marginRight: 8,
   },
+  heartChip: { flexDirection: 'row', gap: 2 },
   chipText: { color: '#0f172a', fontSize: 13 },
   chipTextActive: { color: '#ffffff' },
   list: { padding: 16, paddingBottom: 40 },

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
   value: number;
@@ -9,7 +10,6 @@ interface Props {
   size?: number;
 }
 
-const WARNING_COLOR = '#ef4444';
 const EMPTY_COLOR = '#d1d5db';
 
 export default function HeartRating({ value, themeColor, onPress, readOnly, size = 16 }: Props) {
@@ -18,9 +18,9 @@ export default function HeartRating({ value, themeColor, onPress, readOnly, size
     <View style={styles.row} pointerEvents={isInteractive ? 'auto' : 'none'}>
       {[1, 2, 3, 4, 5].map((n) => {
         const filled = n <= value;
-        const color = filled ? (value >= 3 ? themeColor : WARNING_COLOR) : EMPTY_COLOR;
+        const color = filled ? themeColor : EMPTY_COLOR;
         const heart = (
-          <Text key={n} style={{ color, fontSize: size }}>♥</Text>
+          <Ionicons key={n} testID="heart" name={filled ? 'heart' : 'heart-outline'} size={size} color={color} />
         );
         if (!isInteractive) return heart;
         return (
