@@ -10,9 +10,11 @@ import { getAllStores, searchStores, deleteStore } from '@/db/storeRepository';
 import { getAllCategories } from '@/db/categoryRepository';
 import StoreCard from '@/components/StoreCard';
 import FAB from '@/components/FAB';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export default function RecordsScreen() {
   const router = useRouter();
+  const themeColor = useSettingsStore((s) => s.themeColor);
   const [stores, setStores] = useState<Store[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchVisible, setSearchVisible] = useState(false);
@@ -41,62 +43,66 @@ export default function RecordsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColor }]} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace('/')}>
-          <Text style={styles.back}>← 返回首頁</Text>
+        <TouchableOpacity style={styles.headerSide} onPress={() => router.replace('/')}>
+          <Text style={styles.back}>← 返回</Text>
         </TouchableOpacity>
         <Text style={styles.title}>紀錄</Text>
-        <TouchableOpacity onPress={() => {
+        <TouchableOpacity style={[styles.headerSide, styles.headerSideRight]} onPress={() => {
           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setSearchVisible((v) => !v);
           if (searchVisible) setQuery('');
         }}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Text style={styles.searchText}>搜尋</Text>
         </TouchableOpacity>
       </View>
 
-      {searchVisible && (
-        <TextInput
-          style={styles.searchInput}
-          placeholder="搜尋店家名稱..."
-          placeholderTextColor="#94a3b8"
-          value={query}
-          onChangeText={setQuery}
-          autoFocus
-        />
-      )}
-
-      <FlatList
-        data={stores}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <StoreCard
-            store={item}
-            category={categoryMap[item.categoryId]}
-            onPress={() => router.push(`/store/${item.id}`)}
-            onLongPress={() => handleLongPress(item)}
+      <View style={styles.body}>
+        {searchVisible && (
+          <TextInput
+            style={styles.searchInput}
+            placeholder="搜尋店家名稱..."
+            placeholderTextColor="#94a3b8"
+            value={query}
+            onChangeText={setQuery}
+            autoFocus
           />
         )}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>還沒有記錄，點 ＋ 新增第一家店！</Text>}
-      />
 
-      <FAB onPress={() => router.push('/store/add')} />
+        <FlatList
+          data={stores}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <StoreCard
+              store={item}
+              category={categoryMap[item.categoryId]}
+              onPress={() => router.push(`/store/${item.id}`)}
+              onLongPress={() => handleLongPress(item)}
+            />
+          )}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={<Text style={styles.empty}>還沒有記錄，點 ＋ 新增第一家店！</Text>}
+        />
+
+        <FAB onPress={() => router.push('/store/add')} />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1 },
+  body: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
+    alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
   },
-  back: { color: '#475569', fontSize: 15 },
-  title: { color: '#0f172a', fontSize: 18, fontWeight: '700' },
-  searchIcon: { fontSize: 20 },
+  headerSide: { width: 60 },
+  headerSideRight: { alignItems: 'flex-end' },
+  back: { color: '#ffffff', fontSize: 15 },
+  title: { flex: 1, color: '#ffffff', fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  searchText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
   searchInput: {
     backgroundColor: '#f1f5f9', color: '#0f172a',
     marginHorizontal: 16, marginBottom: 8,
