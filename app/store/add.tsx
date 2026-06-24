@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  Alert, StyleSheet, Image,
+  Alert, StyleSheet, Image, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import type { Category } from '@/types';
 import { getAllCategories } from '@/db/categoryRepository';
 import { insertStore, updateStore, getStoreById } from '@/db/storeRepository';
@@ -30,6 +31,8 @@ export default function AddStoreScreen() {
   const [notes, setNotes] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [categoryPickerVisible, setCategoryPickerVisible] = useState(false);
+  const [locatingCurrent, setLocatingCurrent] = useState(false);
 
   useEffect(() => {
     getAllCategories().then((cats) => {
@@ -52,6 +55,8 @@ export default function AddStoreScreen() {
     }
   }, []);
 
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+
   const pickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -60,6 +65,25 @@ export default function AddStoreScreen() {
     });
     if (!result.canceled) {
       setPhotos((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
+    }
+  };
+
+  const useCurrentLocation = async () => {
+    setLocatingCurrent(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('需要定位權限才能使用目前位置');
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({});
+      const [geo] = await Location.reverseGeocodeAsync(loc.coords);
+      const addr = geo ? `${geo.city ?? ''}${geo.district ?? ''}${geo.street ?? ''}` : '';
+      setLatitude(loc.coords.latitude);
+      setLongitude(loc.coords.longitude);
+      setAddress(addr);
+    } finally {
+      setLocatingCurrent(false);
     }
   };
 
@@ -95,15 +119,10 @@ export default function AddStoreScreen() {
           placeholder="輸入店家名稱" placeholderTextColor="#94a3b8" />
 
         <Text style={styles.label}>分類 *</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-          {categories.map((cat) => (
-            <TouchableOpacity key={cat.id}
-              style={[styles.catChip, categoryId === cat.id && { backgroundColor: themeColor }]}
-              onPress={() => setCategoryId(cat.id)}>
-              <Text style={[styles.catText, categoryId === cat.id && styles.catTextActive]}>{cat.emoji} {cat.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <TouchableOpacity style={styles.dropdown} onPress={() => setCategoryPickerVisible(true)}>
+          <Text style={styles.dropdownText}>{selectedCategory ? selectedCategory.name : '請選擇分類'}</Text>
+          <Text style={styles.dropdownArrow}>▾</Text>
+        </TouchableOpacity>
 
         <Text style={styles.label}>評分 *</Text>
         <View style={{ marginBottom: 16 }}>
@@ -111,11 +130,22 @@ export default function AddStoreScreen() {
         </View>
 
         <Text style={styles.label}>位置 *</Text>
-        <TouchableOpacity style={styles.locBtn} onPress={() => setPickerVisible(true)}>
-          <Text style={[styles.locBtnText, { color: themeColor }]}>
-            📍 {address ? address : '選擇位置'}
-          </Text>
-        </TouchableOpacity>
+        {address ? <Text style={styles.locAddress}>📍 {address}</Text> : null}
+        <View style={styles.locRow}>
+          <TouchableOpacity
+            style={[styles.locBtnHalf, { backgroundColor: themeColor }]}
+            onPress={useCurrentLocation}
+            disabled={locatingCurrent}
+          >
+            <Text style={styles.locBtnHalfTextOnColor}>{locatingCurrent ? '定位中...' : '使用目前位置'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.locBtnHalf, styles.locBtnOutline, { borderColor: themeColor }]}
+            onPress={() => setPickerVisible(true)}
+          >
+            <Text style={[styles.locBtnHalfText, { color: themeColor }]}>地圖選點</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>照片（選填）</Text>
         <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
@@ -133,8 +163,26 @@ export default function AddStoreScreen() {
 
         <Text style={styles.label}>備註（選填）</Text>
         <TextInput style={[styles.input, { height: 80 }]} value={notes} onChangeText={setNotes}
-          placeholder="心得、注意事項..." placeholderTextColor="#94a3b8" multiline />
+          multiline />
       </ScrollView>
+
+      <Modal visible={categoryPickerVisible} transparent animationType="fade" onRequestClose={() => setCategoryPickerVisible(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCategoryPickerVisible(false)}>
+          <View style={styles.dropdownList}>
+            {categories.map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                style={styles.dropdownItem}
+                onPress={() => { setCategoryId(cat.id); setCategoryPickerVisible(false); }}
+              >
+                <Text style={[styles.dropdownItemText, categoryId === cat.id && { color: themeColor, fontWeight: '700' }]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <LocationPickerModal
         visible={pickerVisible}
@@ -167,14 +215,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9', color: '#0f172a',
     borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 16,
   },
-  catChip: {
-    backgroundColor: '#f1f5f9', borderRadius: 8,
-    paddingVertical: 6, paddingHorizontal: 12, marginRight: 8,
+  dropdown: {
+    backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 16,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  catText: { color: '#0f172a', fontSize: 13 },
-  catTextActive: { color: '#ffffff' },
-  locBtn: { backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 16 },
-  locBtnText: { fontSize: 14, fontWeight: '500' },
+  dropdownText: { color: '#0f172a', fontSize: 15 },
+  dropdownArrow: { color: '#64748b', fontSize: 14 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  dropdownList: {
+    backgroundColor: '#ffffff', borderRadius: 14, paddingVertical: 8,
+    width: '75%', maxHeight: '60%',
+  },
+  dropdownItem: { paddingVertical: 14, paddingHorizontal: 20 },
+  dropdownItemText: { color: '#0f172a', fontSize: 16, textAlign: 'center' },
+  locAddress: { color: '#64748b', fontSize: 13, marginBottom: 8 },
+  locRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  locBtnHalf: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  locBtnOutline: { backgroundColor: 'transparent', borderWidth: 1.5 },
+  locBtnHalfText: { fontSize: 14, fontWeight: '600' },
+  locBtnHalfTextOnColor: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
   photoBtn: {
     backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12,
     alignItems: 'center', marginBottom: 10,
