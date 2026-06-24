@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, Text, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
+import CameraIcon from './CameraIcon';
 
 interface Props {
   uri?: string;
@@ -13,7 +14,7 @@ export default function PhotoThumbnail({ uri, size = 52 }: Props) {
   }
   return (
     <View style={[style, styles.placeholder]}>
-      <Text style={styles.icon}>📷</Text>
+      <CameraIcon color="#cbd5e1" size={size * 0.4} />
     </View>
   );
 }
@@ -27,5 +28,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: { fontSize: 18, color: '#94a3b8' },
 });
