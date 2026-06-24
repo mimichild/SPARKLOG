@@ -6,7 +6,7 @@ const DEFAULT_CATEGORIES: Omit<Category, 'id'>[] = [
   { name: '餐廳',   emoji: '🍽',  order: 0 },
   { name: '咖啡廳', emoji: '☕',  order: 1 },
   { name: '飲料店', emoji: '🧋',  order: 2 },
-  { name: '服飾',   emoji: '👗',  order: 3 },
+  { name: '服飾店', emoji: '👗',  order: 3 },
   { name: '甜點店', emoji: '🍰',  order: 4 },
 ];
 

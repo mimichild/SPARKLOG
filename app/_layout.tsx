@@ -4,11 +4,15 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { seedCategoriesIfEmpty } from '@/db/categoryRepository';
+import { seedSampleStoresIfEmpty } from '@/db/storeRepository';
 import { registerBackgroundTask } from '@/tasks/locationTask';
 
 export default function RootLayout() {
   useEffect(() => {
-    seedCategoriesIfEmpty();
+    (async () => {
+      await seedCategoriesIfEmpty();
+      await seedSampleStoresIfEmpty();
+    })();
     registerBackgroundTask();
   }, []);
 
