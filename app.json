@@ -29,7 +29,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "需要定位權限以提供雷店接近提醒"
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true

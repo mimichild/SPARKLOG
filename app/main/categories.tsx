@@ -57,7 +57,7 @@ export default function CategoriesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.replace('/')}>
-          <Text style={styles.back}>← 返回</Text>
+          <Text style={styles.back}>← 返回首頁</Text>
         </TouchableOpacity>
         <Text style={styles.title}>分類</Text>
         <TouchableOpacity onPress={openAdd}>
