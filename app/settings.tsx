@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Switch, ScrollView, Alert, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Switch, ScrollView, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -10,7 +10,10 @@ import { getAllStores, insertStore, deleteAllStores } from '@/db/storeRepository
 import { getAllCategories, insertCategory, deleteAllCategories } from '@/db/categoryRepository';
 import { serializeBackup, parseBackup } from '@/utils/exportImport';
 
-const PRESET_COLORS = ['#6c63ff', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899'];
+const PRESET_COLORS = [
+  '#F0ABA7', '#EE9999', '#DAB7A7', '#CBB79F', '#F2E9A2', '#BAD8F3',
+  '#7C2D43', '#A6C7E7', '#B7E2D3', '#FED2DC', '#F8D7B0', '#D8C4E9',
+];
 const RATING_OPTIONS = [
   { label: '1星', value: 1 },
   { label: '2星以下', value: 2 },
@@ -29,6 +32,16 @@ export default function SettingsScreen() {
     themeColor, radarEnabled, radarRatingThreshold, radarRadiusMeters,
     setThemeColor, setRadarEnabled, setRadarRatingThreshold, setRadarRadiusMeters,
   } = useSettingsStore();
+  const [customHex, setCustomHex] = useState('');
+
+  const handleApplyCustomHex = () => {
+    const hex = customHex.trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+      Alert.alert('色碼格式錯誤', '請輸入正確的色碼，例如 #ff0000');
+      return;
+    }
+    setThemeColor(hex);
+  };
 
   const handleExport = async () => {
     const [stores, categories] = await Promise.all([getAllStores(), getAllCategories()]);
@@ -87,15 +100,32 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
-        <Text style={styles.section}>主題顏色</Text>
-        <View style={styles.colorRow}>
+        <Text style={styles.section}>主題色</Text>
+        <View style={styles.colorGrid}>
           {PRESET_COLORS.map((c) => (
             <TouchableOpacity
               key={c}
               style={[styles.colorDot, { backgroundColor: c }, themeColor === c && styles.colorDotActive]}
               onPress={() => setThemeColor(c)}
-            />
+            >
+              {themeColor === c && <Text style={styles.colorCheck}>✓</Text>}
+            </TouchableOpacity>
           ))}
+        </View>
+
+        <Text style={styles.subLabel}>自訂色碼</Text>
+        <View style={styles.customColorRow}>
+          <TextInput
+            style={styles.customColorInput}
+            value={customHex}
+            onChangeText={setCustomHex}
+            placeholder="#ff0000"
+            placeholderTextColor="#94a3b8"
+            autoCapitalize="none"
+          />
+          <TouchableOpacity style={[styles.applyBtn, { backgroundColor: themeColor }]} onPress={handleApplyCustomHex}>
+            <Text style={styles.applyBtnText}>套用</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.section}>心級雷達</Text>
@@ -130,13 +160,14 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={styles.section}>資料管理</Text>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleExport}>
-          <Text style={styles.actionText}>📤 匯出資料</Text>
+        <Text style={styles.section}>備份與還原</Text>
+        <TouchableOpacity style={[styles.exportBtn, { backgroundColor: themeColor }]} onPress={handleExport}>
+          <Text style={styles.exportBtnText}>匯出備份</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleImport}>
-          <Text style={styles.actionText}>📥 匯入資料</Text>
+        <TouchableOpacity style={[styles.importBtn, { borderColor: themeColor }]} onPress={handleImport}>
+          <Text style={[styles.importBtnText, { color: themeColor }]}>匯入備份</Text>
         </TouchableOpacity>
+        <Text style={styles.backupCaption}>合併：新資料加入現有資料｜覆蓋：清除現有資料後還原</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -153,15 +184,29 @@ const styles = StyleSheet.create({
   body: { padding: 20, paddingBottom: 60 },
   section: { color: '#0f172a', fontSize: 15, fontWeight: '700', marginTop: 24, marginBottom: 12 },
   subLabel: { color: '#64748b', fontSize: 12, marginTop: 12, marginBottom: 8 },
-  colorRow: { flexDirection: 'row', gap: 12 },
-  colorDot: { width: 36, height: 36, borderRadius: 18 },
-  colorDotActive: { borderWidth: 3, borderColor: '#0f172a' },
+  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  colorDot: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  colorDotActive: { borderWidth: 3, borderColor: '#ffffff', shadowColor: '#0f172a', shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 },
+  colorCheck: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+  customColorRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  customColorInput: {
+    flex: 1, backgroundColor: '#f1f5f9', color: '#0f172a',
+    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15,
+  },
+  applyBtn: { borderRadius: 10, paddingHorizontal: 20, paddingVertical: 11 },
+  applyBtnText: { color: '#ffffff', fontSize: 14, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
   rowLabel: { color: '#0f172a', fontSize: 15 },
   optionRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   optionChip: { backgroundColor: '#f1f5f9', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
   optionText: { color: '#0f172a', fontSize: 13 },
   optionTextActive: { color: '#ffffff' },
-  actionBtn: { backgroundColor: '#f1f5f9', borderRadius: 10, padding: 14, marginBottom: 10 },
-  actionText: { color: '#0f172a', fontSize: 15, fontWeight: '500' },
+  exportBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  exportBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
+  importBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, marginBottom: 10 },
+  importBtnText: { fontSize: 15, fontWeight: '700' },
+  backupCaption: { color: '#94a3b8', fontSize: 12, textAlign: 'center' },
 });

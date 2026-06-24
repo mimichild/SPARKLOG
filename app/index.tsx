@@ -2,26 +2,26 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useSettingsStore } from '@/store/settingsStore';
+
+const HOME_BACKGROUND = '#EF999A';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const themeColor = useSettingsStore((s) => s.themeColor);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.center}>
-        <Text style={[styles.title, { color: themeColor }]}>SPARK{'\n'}NOTES</Text>
+      <Text style={styles.title}>SPARK NOTE</Text>
 
-        <TouchableOpacity
-          style={[styles.enterBtn, { backgroundColor: themeColor }]}
-          onPress={() => router.push('/main/records')}
-        >
-          <Text style={styles.enterBtnText}>進入主頁</Text>
+      <View style={styles.bottom}>
+        <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')}>
+          <Text style={styles.settingsText}>設定</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')}>
-          <Text style={styles.settingsText}>⚙️  設定</Text>
+        <TouchableOpacity
+          style={styles.startBtn}
+          onPress={() => router.push('/main/records')}
+        >
+          <Text style={styles.startBtnText}>開始使用</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -29,30 +29,31 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: HOME_BACKGROUND, justifyContent: 'space-between' },
   title: {
-    fontSize: 48,
+    color: '#ffffff',
+    fontSize: 34,
     fontWeight: '800',
     textAlign: 'center',
-    letterSpacing: -1,
-    lineHeight: 56,
-    marginBottom: 40,
+    letterSpacing: -0.5,
+    marginTop: 260,
   },
-  enterBtn: {
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 40,
-  },
-  enterBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  bottom: { marginBottom: 40 },
   settingsBtn: {
-    marginTop: 20,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    alignSelf: 'center',
+    marginBottom: 24,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
   },
-  settingsText: { color: '#475569', fontSize: 15, fontWeight: '500' },
+  settingsText: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+  startBtn: {
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    marginHorizontal: 24,
+    alignItems: 'center',
+  },
+  startBtnText: { color: HOME_BACKGROUND, fontSize: 17, fontWeight: '700' },
 });
