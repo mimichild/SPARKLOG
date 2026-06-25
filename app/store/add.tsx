@@ -11,7 +11,6 @@ import type { Category } from '@/types';
 import { getAllCategories } from '@/db/categoryRepository';
 import { insertStore, updateStore, getStoreById } from '@/db/storeRepository';
 import HeartRating from '@/components/HeartRating';
-import LocationPickerModal from '@/components/LocationPickerModal';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function AddStoreScreen() {
@@ -26,13 +25,14 @@ export default function AddStoreScreen() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [address, setAddress] = useState('');
+  const [addressDirty, setAddressDirty] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [event, setEvent] = useState('');
   const [notes, setNotes] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
-  const [pickerVisible, setPickerVisible] = useState(false);
   const [categoryPickerVisible, setCategoryPickerVisible] = useState(false);
   const [locatingCurrent, setLocatingCurrent] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getAllCategories().then((cats) => {
@@ -76,12 +76,13 @@ export default function AddStoreScreen() {
         Alert.alert('需要定位權限才能使用目前位置');
         return;
       }
-      const loc = await Location.getCurrentPositionAsync({});
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
       const [geo] = await Location.reverseGeocodeAsync(loc.coords);
-      const addr = geo ? `${geo.city ?? ''}${geo.district ?? ''}${geo.street ?? ''}` : '';
+      const addr = geo ? `${geo.subregion ?? ''}${geo.street ?? ''}` : '';
       setLatitude(loc.coords.latitude);
       setLongitude(loc.coords.longitude);
       setAddress(addr);
+      setAddressDirty(false);
     } finally {
       setLocatingCurrent(false);
     }
@@ -90,9 +91,34 @@ export default function AddStoreScreen() {
   const handleSave = async () => {
     if (!name.trim()) { Alert.alert('請輸入店家名稱'); return; }
     if (!categoryId) { Alert.alert('請選擇分類'); return; }
-    if (latitude === null || longitude === null) { Alert.alert('請選擇店家位置'); return; }
+    if (!address.trim()) { Alert.alert('請輸入店家地址或使用目前位置'); return; }
 
-    const data = { name: name.trim(), categoryId, rating, latitude, longitude, address, photos, event, notes };
+    let finalLatitude = latitude;
+    let finalLongitude = longitude;
+
+    if (addressDirty || finalLatitude === null || finalLongitude === null) {
+      setSaving(true);
+      try {
+        const results = await Location.geocodeAsync(address.trim());
+        if (results.length === 0) {
+          Alert.alert('找不到這個地址的座標', '請確認地址是否正確，或改用「使用目前位置」');
+          return;
+        }
+        finalLatitude = results[0].latitude;
+        finalLongitude = results[0].longitude;
+      } catch {
+        Alert.alert('地址轉換座標失敗', '請稍後再試，或改用「使用目前位置」');
+        return;
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    const data = {
+      name: name.trim(), categoryId, rating,
+      latitude: finalLatitude, longitude: finalLongitude,
+      address: address.trim(), photos, event, notes,
+    };
     if (isEdit && params.storeId) {
       await updateStore(params.storeId, data);
     } else {
@@ -108,8 +134,8 @@ export default function AddStoreScreen() {
           <Text style={styles.cancel}>取消</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{isEdit ? '編輯店家' : '新增店家'}</Text>
-        <TouchableOpacity onPress={handleSave}>
-          <Text style={[styles.save, { color: themeColor }]}>儲存</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving}>
+          <Text style={[styles.save, { color: themeColor }]}>{saving ? '儲存中...' : '儲存'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -129,23 +155,21 @@ export default function AddStoreScreen() {
           <HeartRating value={rating} themeColor={themeColor} onPress={(v) => setRating(v as 1 | 2 | 3 | 4 | 5)} size={28} />
         </View>
 
-        <Text style={styles.label}>位置 *</Text>
-        {address ? <Text style={styles.locAddress}>📍 {address}</Text> : null}
-        <View style={styles.locRow}>
-          <TouchableOpacity
-            style={[styles.locBtnHalf, { backgroundColor: themeColor }]}
-            onPress={useCurrentLocation}
-            disabled={locatingCurrent}
-          >
-            <Text style={styles.locBtnHalfTextOnColor}>{locatingCurrent ? '定位中...' : '使用目前位置'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.locBtnHalf, styles.locBtnOutline, { borderColor: themeColor }]}
-            onPress={() => setPickerVisible(true)}
-          >
-            <Text style={[styles.locBtnHalfText, { color: themeColor }]}>地圖選點</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.label}>地址 *</Text>
+        <TextInput
+          style={styles.input}
+          value={address}
+          onChangeText={(text) => { setAddress(text); setAddressDirty(true); }}
+          placeholder="輸入店家地址"
+          placeholderTextColor="#94a3b8"
+        />
+        <TouchableOpacity
+          style={[styles.currentLocBtn, { backgroundColor: themeColor }]}
+          onPress={useCurrentLocation}
+          disabled={locatingCurrent}
+        >
+          <Text style={styles.currentLocBtnText}>{locatingCurrent ? '定位中...' : '使用目前位置'}</Text>
+        </TouchableOpacity>
 
         <Text style={styles.label}>照片（選填）</Text>
         <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
@@ -183,19 +207,6 @@ export default function AddStoreScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-
-      <LocationPickerModal
-        visible={pickerVisible}
-        initialLatitude={latitude ?? undefined}
-        initialLongitude={longitude ?? undefined}
-        onConfirm={(lat, lon, addr) => {
-          setLatitude(lat);
-          setLongitude(lon);
-          setAddress(addr);
-          setPickerVisible(false);
-        }}
-        onCancel={() => setPickerVisible(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -228,12 +239,8 @@ const styles = StyleSheet.create({
   },
   dropdownItem: { paddingVertical: 14, paddingHorizontal: 20 },
   dropdownItemText: { color: '#0f172a', fontSize: 16, textAlign: 'center' },
-  locAddress: { color: '#64748b', fontSize: 13, marginBottom: 8 },
-  locRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  locBtnHalf: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  locBtnOutline: { backgroundColor: 'transparent', borderWidth: 1.5 },
-  locBtnHalfText: { fontSize: 14, fontWeight: '600' },
-  locBtnHalfTextOnColor: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+  currentLocBtn: { borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 16 },
+  currentLocBtnText: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
   photoBtn: {
     backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12,
     alignItems: 'center', marginBottom: 10,
