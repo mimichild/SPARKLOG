@@ -18,13 +18,14 @@ export default function RankingsScreen() {
   const [stores, setStores] = useState<Store[]>([]);
   const [minRating, setMinRating] = useState(1);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>('desc');
 
   const load = useCallback(async () => {
     const cats = await getAllCategories();
     setCategories(cats);
     const result = await getStoresFiltered(minRating, selectedCategoryIds);
-    setStores(result);
-  }, [minRating, selectedCategoryIds]);
+    setStores(sortDirection === 'asc' ? [...result].reverse() : result);
+  }, [minRating, selectedCategoryIds, sortDirection]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -35,85 +36,100 @@ export default function RankingsScreen() {
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColor }]} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace('/')}>
+        <TouchableOpacity style={styles.headerSide} onPress={() => router.replace('/')}>
           <Text style={styles.back}>← 返回</Text>
         </TouchableOpacity>
         <Text style={styles.title}>排行</Text>
-        <View style={{ width: 60 }} />
+        <TouchableOpacity
+          style={[styles.headerSide, styles.headerSideRight, styles.sortDirBtn]}
+          onPress={() => setSortDirection((d) => (d === 'desc' ? 'asc' : 'desc'))}
+        >
+          <Text style={styles.sortDirText}>{sortDirection === 'desc' ? '5' : '1'}</Text>
+          <Ionicons name="heart" size={11} color="#ffffff" />
+          <Ionicons name="arrow-forward" size={11} color="#ffffff" />
+          <Text style={styles.sortDirText}>{sortDirection === 'desc' ? '1' : '5'}</Text>
+          <Ionicons name="heart" size={11} color="#ffffff" />
+        </TouchableOpacity>
       </View>
 
-      <Text style={styles.filterTitle}>篩選</Text>
+      <View style={styles.body}>
+        <Text style={styles.filterTitle}>篩選</Text>
 
-      <Text style={styles.filterSubLabel}>心級（{minRating} 顆心以上）</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterScroll}
-        contentContainerStyle={styles.filterRow}
-      >
-        {ALL_RATINGS.map((n) => (
-          <TouchableOpacity
-            key={n}
-            style={[styles.chip, styles.heartChip, minRating === n && { backgroundColor: themeColor }]}
-            onPress={() => setMinRating(n)}
-          >
-            {Array.from({ length: n }).map((_, i) => (
-              <Ionicons
-                key={i}
-                name="heart"
-                size={12}
-                color={minRating === n ? '#ffffff' : themeColor}
-              />
-            ))}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+        <Text style={styles.filterSubLabel}>心級（{minRating} 顆心以上）</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScroll}
+          contentContainerStyle={styles.filterRow}
+        >
+          {ALL_RATINGS.map((n) => (
+            <TouchableOpacity
+              key={n}
+              style={[styles.chip, styles.heartChip, minRating === n && { backgroundColor: themeColor }]}
+              onPress={() => setMinRating(n)}
+            >
+              {Array.from({ length: n }).map((_, i) => (
+                <Ionicons
+                  key={i}
+                  name="heart"
+                  size={12}
+                  color={minRating === n ? '#ffffff' : themeColor}
+                />
+              ))}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-      <Text style={styles.filterSubLabel}>分類</Text>
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterScroll}
-        data={categories}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.catFilterRow}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.chip, selectedCategoryIds.includes(item.id) && { backgroundColor: themeColor }]}
-            onPress={() => toggleCategory(item.id)}
-          >
-            <Text style={[styles.chipText, selectedCategoryIds.includes(item.id) && styles.chipTextActive]} numberOfLines={1}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
+        <Text style={styles.filterSubLabel}>分類</Text>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScroll}
+          data={categories}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.catFilterRow}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.chip, selectedCategoryIds.includes(item.id) && { backgroundColor: themeColor }]}
+              onPress={() => toggleCategory(item.id)}
+            >
+              <Text style={[styles.chipText, selectedCategoryIds.includes(item.id) && styles.chipTextActive]} numberOfLines={1}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
 
-      <FlatList
-        style={styles.storeList}
-        data={stores}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <StoreCard store={item} category={categoryMap[item.categoryId]} onPress={() => router.push(`/store/${item.id}`)} />
-        )}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>沒有符合篩選條件的店家</Text>}
-      />
+        <FlatList
+          style={styles.storeList}
+          data={stores}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <StoreCard store={item} category={categoryMap[item.categoryId]} onPress={() => router.push(`/store/${item.id}`)} />
+          )}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={<Text style={styles.empty}>沒有符合篩選條件的店家</Text>}
+        />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1 },
+  body: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
   },
-  back: { color: '#475569', fontSize: 14 },
-  title: { color: '#0f172a', fontSize: 18, fontWeight: '700' },
+  headerSide: { width: 76 },
+  headerSideRight: { alignItems: 'flex-end' },
+  back: { color: '#ffffff', fontSize: 14 },
+  title: { flex: 1, color: '#ffffff', fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  sortDirBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  sortDirText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
   filterTitle: { color: '#0f172a', fontSize: 16, fontWeight: '700', paddingHorizontal: 16, paddingTop: 14 },
   filterSubLabel: { color: '#64748b', fontSize: 12, fontWeight: '600', paddingHorizontal: 16, marginTop: 10, marginBottom: 6 },
   filterScroll: { flexGrow: 0, flexShrink: 0, height: 44 },

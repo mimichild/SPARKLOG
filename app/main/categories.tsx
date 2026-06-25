@@ -63,32 +63,34 @@ export default function CategoriesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColor }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.replace('/')}>
           <Text style={styles.back}>← 返回</Text>
         </TouchableOpacity>
         <Text style={styles.title}>分類</Text>
         <TouchableOpacity onPress={openEditSheet}>
-          <Text style={[styles.editBtn, { color: themeColor }]}>編輯</Text>
+          <Text style={styles.editBtn}>編輯</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={categories}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.grid}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.chip, { backgroundColor: themeColor }]}
-            onPress={() => router.push(`/category/${item.id}`)}
-          >
-            <Text style={styles.chipName}>{item.name}</Text>
-            <Text style={styles.chipCount}>{counts[item.id] ?? 0} 家</Text>
-          </TouchableOpacity>
-        )}
-      />
+      <View style={styles.body}>
+        <FlatList
+          data={categories}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.grid}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.chip, { backgroundColor: themeColor }]}
+              onPress={() => router.push(`/category/${item.id}`)}
+            >
+              <Text style={styles.chipName}>{item.name}</Text>
+              <Text style={styles.chipCount}>{counts[item.id] ?? 0} 家</Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
 
       <Modal visible={editSheetVisible} transparent animationType="slide" onRequestClose={() => setEditSheetVisible(false)}>
         <View style={styles.modalOverlay}>
@@ -162,14 +164,15 @@ export default function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1 },
+  body: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
+    alignItems: 'center', padding: 16,
   },
-  back: { color: '#475569', fontSize: 15 },
-  title: { color: '#0f172a', fontSize: 18, fontWeight: '700' },
-  editBtn: { fontSize: 15, fontWeight: '600' },
+  back: { color: '#ffffff', fontSize: 15 },
+  title: { color: '#ffffff', fontSize: 18, fontWeight: '700' },
+  editBtn: { color: '#ffffff', fontSize: 15, fontWeight: '600' },
   grid: { padding: GRID_PADDING },
   chip: {
     width: CHIP_WIDTH, margin: CHIP_MARGIN, borderRadius: 14,
