@@ -32,19 +32,18 @@ export default function CategoryDetailScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity style={styles.headerSide} onPress={() => router.back()}>
           <Text style={styles.back}>← 返回分類頁</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{category ? `${category.emoji} ${category.name}` : ''}</Text>
-        <TouchableOpacity onPress={() => setSearchVisible((v) => !v)}>
-          <Text style={styles.searchIcon}>🔍</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.sortRow}>
-        <TouchableOpacity onPress={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}>
-          <Text style={[styles.sort, { color: themeColor }]}>{sortOrder === 'desc' ? '新→舊' : '舊→新'}</Text>
-        </TouchableOpacity>
+        <Text style={styles.title}>{category ? category.name : ''}</Text>
+        <View style={[styles.headerSide, styles.headerSideRight]}>
+          <TouchableOpacity onPress={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}>
+            <Text style={[styles.sort, { color: themeColor }]}>{sortOrder === 'desc' ? '新→舊' : '舊→新'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setSearchVisible((v) => !v)}>
+            <Text style={styles.searchText}>搜尋</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {searchVisible && (
@@ -78,10 +77,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
   },
+  headerSide: { width: 130 },
+  headerSideRight: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 12 },
   back: { color: '#475569', fontSize: 14 },
-  title: { color: '#0f172a', fontSize: 16, fontWeight: '700' },
-  searchIcon: { fontSize: 20 },
-  sortRow: { paddingHorizontal: 16, paddingTop: 8 },
+  title: { flex: 1, color: '#0f172a', fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  searchText: { color: '#475569', fontSize: 14, fontWeight: '600' },
   sort: { fontSize: 13, fontWeight: '600' },
   searchInput: {
     backgroundColor: '#f1f5f9', color: '#0f172a',
