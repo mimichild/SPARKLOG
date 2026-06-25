@@ -38,12 +38,10 @@ export async function getStoresByCategory(categoryId: string, order: 'desc' | 'a
   return rows.map(rowToStore);
 }
 
-export async function getStoresFiltered(ratings: number[], categoryIds: string[]): Promise<Store[]> {
-  if (ratings.length === 0) return [];
+export async function getStoresFiltered(minRating: number, categoryIds: string[]): Promise<Store[]> {
   const db = await getDb();
-  const rPlaceholders = ratings.map(() => '?').join(',');
-  const params: any[] = [...ratings];
-  let sql = `SELECT * FROM stores WHERE rating IN (${rPlaceholders})`;
+  const params: any[] = [minRating];
+  let sql = 'SELECT * FROM stores WHERE rating >= ?';
   if (categoryIds.length > 0) {
     const cPlaceholders = categoryIds.map(() => '?').join(',');
     sql += ` AND categoryId IN (${cPlaceholders})`;

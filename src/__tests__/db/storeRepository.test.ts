@@ -53,11 +53,11 @@ test('getLowRatedStores queries rating <= threshold', async () => {
   expect(mockDb.getAllAsync).toHaveBeenCalledWith(expect.stringContaining('rating <= ?'), [2]);
 });
 
-test('getStoresFiltered combines rating and category filters', async () => {
+test('getStoresFiltered combines minimum rating and category filters', async () => {
   mockDb.getAllAsync.mockResolvedValue([]);
-  await getStoresFiltered([4, 5], ['cat-1', 'cat-2']);
+  await getStoresFiltered(4, ['cat-1', 'cat-2']);
   expect(mockDb.getAllAsync).toHaveBeenCalledWith(
-    expect.stringContaining('rating IN (?,?) AND categoryId IN (?,?)'),
-    [4, 5, 'cat-1', 'cat-2'],
+    expect.stringContaining('rating >= ? AND categoryId IN (?,?)'),
+    [4, 'cat-1', 'cat-2'],
   );
 });

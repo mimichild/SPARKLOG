@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,28 +9,24 @@ import { getAllCategories } from '@/db/categoryRepository';
 import StoreCard from '@/components/StoreCard';
 import { useSettingsStore } from '@/store/settingsStore';
 
-const ALL_RATINGS = [5, 4, 3, 2, 1];
+const ALL_RATINGS = [1, 2, 3, 4, 5];
 
 export default function RankingsScreen() {
   const router = useRouter();
   const themeColor = useSettingsStore((s) => s.themeColor);
   const [categories, setCategories] = useState<Category[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
-  const [selectedRatings, setSelectedRatings] = useState<number[]>(ALL_RATINGS);
+  const [minRating, setMinRating] = useState(1);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
   const load = useCallback(async () => {
     const cats = await getAllCategories();
     setCategories(cats);
-    const result = await getStoresFiltered(selectedRatings, selectedCategoryIds);
+    const result = await getStoresFiltered(minRating, selectedCategoryIds);
     setStores(result);
-  }, [selectedRatings, selectedCategoryIds]);
+  }, [minRating, selectedCategoryIds]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
-
-  const toggleRating = (n: number) => {
-    setSelectedRatings((prev) => (prev.includes(n) ? prev.filter((r) => r !== n) : [...prev, n]));
-  };
 
   const toggleCategory = (id: string) => {
     setSelectedCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
@@ -48,28 +44,38 @@ export default function RankingsScreen() {
         <View style={{ width: 60 }} />
       </View>
 
-      <View style={styles.filterRow}>
+      <Text style={styles.filterTitle}>篩選</Text>
+
+      <Text style={styles.filterSubLabel}>心級（{minRating} 顆心以上）</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterRow}
+      >
         {ALL_RATINGS.map((n) => (
           <TouchableOpacity
             key={n}
-            style={[styles.chip, styles.heartChip, selectedRatings.includes(n) && { backgroundColor: themeColor }]}
-            onPress={() => toggleRating(n)}
+            style={[styles.chip, styles.heartChip, minRating === n && { backgroundColor: themeColor }]}
+            onPress={() => setMinRating(n)}
           >
             {Array.from({ length: n }).map((_, i) => (
               <Ionicons
                 key={i}
                 name="heart"
-                size={13}
-                color={selectedRatings.includes(n) ? '#ffffff' : themeColor}
+                size={12}
+                color={minRating === n ? '#ffffff' : themeColor}
               />
             ))}
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
+      <Text style={styles.filterSubLabel}>分類</Text>
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
         data={categories}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.catFilterRow}
@@ -78,14 +84,15 @@ export default function RankingsScreen() {
             style={[styles.chip, selectedCategoryIds.includes(item.id) && { backgroundColor: themeColor }]}
             onPress={() => toggleCategory(item.id)}
           >
-            <Text style={[styles.chipText, selectedCategoryIds.includes(item.id) && styles.chipTextActive]}>
-              {item.emoji} {item.name}
+            <Text style={[styles.chipText, selectedCategoryIds.includes(item.id) && styles.chipTextActive]} numberOfLines={1}>
+              {item.name}
             </Text>
           </TouchableOpacity>
         )}
       />
 
       <FlatList
+        style={styles.storeList}
         data={stores}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -107,15 +114,21 @@ const styles = StyleSheet.create({
   },
   back: { color: '#475569', fontSize: 14 },
   title: { color: '#0f172a', fontSize: 18, fontWeight: '700' },
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 12 },
-  catFilterRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
+  filterTitle: { color: '#0f172a', fontSize: 16, fontWeight: '700', paddingHorizontal: 16, paddingTop: 14 },
+  filterSubLabel: { color: '#64748b', fontSize: 12, fontWeight: '600', paddingHorizontal: 16, marginTop: 10, marginBottom: 6 },
+  filterScroll: { flexGrow: 0, flexShrink: 0, height: 44 },
+  filterRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 },
+  catFilterRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 },
   chip: {
+    height: 36,
     backgroundColor: '#f1f5f9', borderRadius: 8,
-    paddingVertical: 6, paddingHorizontal: 12, marginRight: 8,
+    paddingHorizontal: 12, marginRight: 8,
+    alignItems: 'center', justifyContent: 'center',
   },
   heartChip: { flexDirection: 'row', gap: 2 },
   chipText: { color: '#0f172a', fontSize: 13 },
   chipTextActive: { color: '#ffffff' },
+  storeList: { flex: 1 },
   list: { padding: 16, paddingBottom: 40 },
   empty: { color: '#94a3b8', textAlign: 'center', marginTop: 60, fontSize: 15 },
 });
