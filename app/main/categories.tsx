@@ -1,26 +1,30 @@
 import React, { useCallback, useState } from 'react';
 import {
   View, Text, TouchableOpacity, FlatList, Alert,
-  Modal, TextInput, StyleSheet,
+  Modal, TextInput, StyleSheet, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import type { Category } from '@/types';
 import {
-  getAllCategories, insertCategory, deleteCategory, updateCategory,
+  getAllCategories, insertCategory, deleteCategory, reorderCategories,
 } from '@/db/categoryRepository';
 import { getAllStores } from '@/db/storeRepository';
 import { useSettingsStore } from '@/store/settingsStore';
+
+const GRID_PADDING = 12;
+const CHIP_MARGIN = 6;
+const CHIP_WIDTH = (Dimensions.get('window').width - GRID_PADDING * 2 - CHIP_MARGIN * 4) / 2;
 
 export default function CategoriesScreen() {
   const router = useRouter();
   const themeColor = useSettingsStore((s) => s.themeColor);
   const [categories, setCategories] = useState<Category[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editTarget, setEditTarget] = useState<Category | null>(null);
-  const [inputName, setInputName] = useState('');
-  const [inputEmoji, setInputEmoji] = useState('');
+  const [editSheetVisible, setEditSheetVisible] = useState(false);
+  const [addingNew, setAddingNew] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const load = useCallback(async () => {
     const [cats, stores] = await Promise.all([getAllCategories(), getAllStores()]);
@@ -32,17 +36,13 @@ export default function CategoriesScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const openAdd = () => { setEditTarget(null); setInputName(''); setInputEmoji(''); setModalVisible(true); };
-  const openEdit = (cat: Category) => { setEditTarget(cat); setInputName(cat.name); setInputEmoji(cat.emoji); setModalVisible(true); };
+  const openEditSheet = () => { setAddingNew(false); setNewCategoryName(''); setEditSheetVisible(true); };
 
-  const handleSave = async () => {
-    if (!inputName.trim()) { Alert.alert('請輸入分類名稱'); return; }
-    if (editTarget) {
-      await updateCategory(editTarget.id, inputName.trim(), inputEmoji || '📌');
-    } else {
-      await insertCategory(inputName.trim(), inputEmoji || '📌');
-    }
-    setModalVisible(false);
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) { Alert.alert('請輸入分類名稱'); return; }
+    await insertCategory(newCategoryName.trim(), '');
+    setNewCategoryName('');
+    setAddingNew(false);
     load();
   };
 
@@ -53,6 +53,15 @@ export default function CategoriesScreen() {
     ]);
   };
 
+  const moveCategory = async (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= categories.length) return;
+    const next = [...categories];
+    [next[index], next[target]] = [next[target], next[index]];
+    setCategories(next);
+    await reorderCategories(next.map((c) => c.id));
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -60,8 +69,8 @@ export default function CategoriesScreen() {
           <Text style={styles.back}>← 返回</Text>
         </TouchableOpacity>
         <Text style={styles.title}>分類</Text>
-        <TouchableOpacity onPress={openAdd}>
-          <Text style={[styles.editBtn, { color: themeColor }]}>✏️ 編輯</Text>
+        <TouchableOpacity onPress={openEditSheet}>
+          <Text style={[styles.editBtn, { color: themeColor }]}>編輯</Text>
         </TouchableOpacity>
       </View>
 
@@ -72,36 +81,76 @@ export default function CategoriesScreen() {
         contentContainerStyle={styles.grid}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.chip}
+            style={[styles.chip, { backgroundColor: themeColor }]}
             onPress={() => router.push(`/category/${item.id}`)}
-            onLongPress={() => {
-              Alert.alert(item.name, '', [
-                { text: '編輯', onPress: () => openEdit(item) },
-                { text: '刪除', style: 'destructive', onPress: () => handleDelete(item) },
-                { text: '取消', style: 'cancel' },
-              ]);
-            }}
           >
-            <Text style={styles.chipEmoji}>{item.emoji}</Text>
             <Text style={styles.chipName}>{item.name}</Text>
             <Text style={styles.chipCount}>{counts[item.id] ?? 0} 家</Text>
           </TouchableOpacity>
         )}
       />
 
-      <Modal visible={modalVisible} transparent animationType="slide">
+      <Modal visible={editSheetVisible} transparent animationType="slide" onRequestClose={() => setEditSheetVisible(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>{editTarget ? '編輯分類' : '新增分類'}</Text>
-            <TextInput style={styles.modalInput} value={inputEmoji}
-              onChangeText={setInputEmoji} placeholder="Emoji 圖示" placeholderTextColor="#94a3b8" />
-            <TextInput style={styles.modalInput} value={inputName}
-              onChangeText={setInputName} placeholder="分類名稱" placeholderTextColor="#94a3b8" />
+          <View style={styles.editSheet}>
+            <Text style={styles.modalTitle}>編輯分類</Text>
+
+            {addingNew ? (
+              <View style={styles.addRow}>
+                <TextInput
+                  style={styles.addInput}
+                  value={newCategoryName}
+                  onChangeText={setNewCategoryName}
+                  placeholder="分類名稱"
+                  placeholderTextColor="#94a3b8"
+                  autoFocus
+                />
+                <TouchableOpacity style={[styles.addConfirmBtn, { backgroundColor: themeColor }]} onPress={handleAddCategory}>
+                  <Text style={styles.addConfirmBtnText}>新增</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.addCategoryBtn} onPress={() => setAddingNew(true)}>
+                <Ionicons name="add" size={18} color={themeColor} />
+                <Text style={[styles.addCategoryBtnText, { color: themeColor }]}>新增分類</Text>
+              </TouchableOpacity>
+            )}
+
+            <Text style={styles.sectionLabel}>修改排序</Text>
+            <FlatList
+              data={categories}
+              keyExtractor={(item) => item.id}
+              style={styles.reorderList}
+              renderItem={({ item, index }) => (
+                <View style={styles.reorderRow}>
+                  <TouchableOpacity
+                    style={styles.reorderArrowBtn}
+                    onPress={() => moveCategory(index, -1)}
+                    disabled={index === 0}
+                  >
+                    <Ionicons name="chevron-up" size={18} color={index === 0 ? '#cbd5e1' : '#64748b'} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.reorderArrowBtn}
+                    onPress={() => moveCategory(index, 1)}
+                    disabled={index === categories.length - 1}
+                  >
+                    <Ionicons name="chevron-down" size={18} color={index === categories.length - 1 ? '#cbd5e1' : '#64748b'} />
+                  </TouchableOpacity>
+                  <Text style={styles.reorderName} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.reorderCount}>{counts[item.id] ?? 0} 家</Text>
+                  <TouchableOpacity style={styles.reorderDeleteBtn} onPress={() => handleDelete(item)}>
+                    <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+
             <View style={styles.modalActions}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <TouchableOpacity onPress={() => setEditSheetVisible(false)}>
                 <Text style={styles.modalCancel}>取消</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleSave}>
+              <TouchableOpacity onPress={() => setEditSheetVisible(false)}>
                 <Text style={[styles.modalSave, { color: themeColor }]}>儲存</Text>
               </TouchableOpacity>
             </View>
@@ -121,22 +170,42 @@ const styles = StyleSheet.create({
   back: { color: '#475569', fontSize: 15 },
   title: { color: '#0f172a', fontSize: 18, fontWeight: '700' },
   editBtn: { fontSize: 15, fontWeight: '600' },
-  grid: { padding: 12 },
+  grid: { padding: GRID_PADDING },
   chip: {
-    flex: 1, margin: 6, backgroundColor: '#ffffff', borderRadius: 12,
-    padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb',
+    width: CHIP_WIDTH, margin: CHIP_MARGIN, borderRadius: 14,
+    paddingVertical: 24, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center',
   },
-  chipEmoji: { fontSize: 28, marginBottom: 6 },
-  chipName: { color: '#0f172a', fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  chipCount: { color: '#94a3b8', fontSize: 12, marginTop: 4 },
+  chipName: { color: '#ffffff', fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  chipCount: { color: 'rgba(255,255,255,0.85)', fontSize: 13, marginTop: 6 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalBox: { backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  modalTitle: { color: '#0f172a', fontSize: 17, fontWeight: '600', marginBottom: 16 },
-  modalInput: {
-    backgroundColor: '#f1f5f9', color: '#0f172a',
-    borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 12,
+  editSheet: {
+    backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    padding: 24, maxHeight: '80%',
   },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 20, marginTop: 8 },
+  modalTitle: { color: '#0f172a', fontSize: 17, fontWeight: '600', marginBottom: 16 },
+  addCategoryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: '#f1f5f9', borderRadius: 10, paddingVertical: 12, marginBottom: 16,
+  },
+  addCategoryBtnText: { fontSize: 15, fontWeight: '600' },
+  addRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  addInput: {
+    flex: 1, backgroundColor: '#f1f5f9', color: '#0f172a',
+    borderRadius: 10, paddingHorizontal: 12, fontSize: 15,
+  },
+  addConfirmBtn: { borderRadius: 10, paddingHorizontal: 18, justifyContent: 'center' },
+  addConfirmBtnText: { color: '#ffffff', fontSize: 14, fontWeight: '700' },
+  sectionLabel: { color: '#64748b', fontSize: 12, fontWeight: '600', letterSpacing: 0.5, marginBottom: 8, textTransform: 'uppercase' },
+  reorderList: { maxHeight: 280 },
+  reorderRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+  },
+  reorderArrowBtn: { padding: 4 },
+  reorderName: { flex: 1, color: '#0f172a', fontSize: 15, marginLeft: 6 },
+  reorderCount: { color: '#94a3b8', fontSize: 12, marginRight: 8 },
+  reorderDeleteBtn: { padding: 4 },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 20, marginTop: 16 },
   modalCancel: { color: '#64748b', fontSize: 16 },
   modalSave: { fontSize: 16, fontWeight: '600' },
 });

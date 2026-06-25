@@ -53,3 +53,10 @@ export async function deleteAllCategories(): Promise<void> {
   const db = await getDb();
   await db.runAsync('DELETE FROM categories');
 }
+
+export async function reorderCategories(orderedIds: string[]): Promise<void> {
+  const db = await getDb();
+  for (let i = 0; i < orderedIds.length; i++) {
+    await db.runAsync('UPDATE categories SET "order" = ? WHERE id = ?', [i, orderedIds[i]]);
+  }
+}
