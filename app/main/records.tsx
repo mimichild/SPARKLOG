@@ -19,6 +19,7 @@ export default function RecordsScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchVisible, setSearchVisible] = useState(false);
   const [query, setQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   const load = useCallback(async () => {
     const [s, c] = await Promise.all([getAllStores(), getAllCategories()]);
@@ -34,6 +35,7 @@ export default function RecordsScreen() {
   }, [query]);
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+  const displayStores = sortOrder === 'asc' ? [...stores].reverse() : stores;
 
   const handleLongPress = (store: Store) => {
     Alert.alert('刪除店家', `確定要刪除「${store.name}」？`, [
@@ -49,13 +51,18 @@ export default function RecordsScreen() {
           <Text style={styles.back}>← 返回</Text>
         </TouchableOpacity>
         <Text style={styles.title}>紀錄</Text>
-        <TouchableOpacity style={[styles.headerSide, styles.headerSideRight]} onPress={() => {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-          setSearchVisible((v) => !v);
-          if (searchVisible) setQuery('');
-        }}>
-          <Text style={styles.searchText}>搜尋</Text>
-        </TouchableOpacity>
+        <View style={[styles.headerSide, styles.headerSideRight]}>
+          <TouchableOpacity onPress={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}>
+            <Text style={styles.sortText}>{sortOrder === 'desc' ? '新→舊' : '舊→新'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setSearchVisible((v) => !v);
+            if (searchVisible) setQuery('');
+          }}>
+            <Text style={styles.searchText}>搜尋</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -71,7 +78,7 @@ export default function RecordsScreen() {
         )}
 
         <FlatList
-          data={stores}
+          data={displayStores}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <StoreCard
@@ -98,10 +105,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
   },
-  headerSide: { width: 60 },
-  headerSideRight: { alignItems: 'flex-end' },
+  headerSide: { width: 110 },
+  headerSideRight: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 12 },
   back: { color: '#ffffff', fontSize: 15 },
   title: { flex: 1, color: '#ffffff', fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  sortText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
   searchText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
   searchInput: {
     backgroundColor: '#f1f5f9', color: '#0f172a',
