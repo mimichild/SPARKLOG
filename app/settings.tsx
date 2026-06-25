@@ -164,6 +164,18 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const handleClearAllStores = () => {
+    Alert.alert('清除所有店家資料', '確定要刪除所有店家紀錄嗎？此操作無法復原（分類不會被刪除）。', [
+      { text: '取消', style: 'cancel' },
+      {
+        text: '清除', style: 'destructive', onPress: async () => {
+          await deleteAllStores();
+          Alert.alert('已清除所有店家資料');
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -243,6 +255,10 @@ export default function SettingsScreen() {
           <Text style={[styles.importBtnText, { color: themeColor }]}>匯入備份</Text>
         </TouchableOpacity>
         <Text style={styles.backupCaption}>合併：新資料加入現有資料｜覆蓋：清除現有資料後還原</Text>
+
+        <TouchableOpacity style={styles.dangerBtn} onPress={handleClearAllStores}>
+          <Text style={styles.dangerBtnText}>清除所有店家資料</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <Modal visible={progressModalVisible} transparent animationType="fade">
@@ -296,6 +312,8 @@ const styles = StyleSheet.create({
   importBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, marginBottom: 10 },
   importBtnText: { fontSize: 15, fontWeight: '700' },
   backupCaption: { color: '#94a3b8', fontSize: 12, textAlign: 'center' },
+  dangerBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
+  dangerBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '600' },
   progressOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
   progressBox: { backgroundColor: '#ffffff', borderRadius: 16, padding: 28, width: '78%', alignItems: 'center' },
   progressPercent: { color: '#0f172a', fontSize: 28, fontWeight: '700', marginBottom: 14 },

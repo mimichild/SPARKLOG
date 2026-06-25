@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  Alert, StyleSheet, Image, Modal,
+  Alert, StyleSheet, Image, Modal, KeyboardAvoidingView, Platform, findNodeHandle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -12,6 +12,8 @@ import { getAllCategories } from '@/db/categoryRepository';
 import { insertStore, updateStore, getStoreById } from '@/db/storeRepository';
 import HeartRating from '@/components/HeartRating';
 import { useSettingsStore } from '@/store/settingsStore';
+
+const MAX_PHOTOS = 2;
 
 export default function AddStoreScreen() {
   const router = useRouter();
@@ -33,6 +35,10 @@ export default function AddStoreScreen() {
   const [categoryPickerVisible, setCategoryPickerVisible] = useState(false);
   const [locatingCurrent, setLocatingCurrent] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const scrollRef = useRef<ScrollView>(null);
+  const eventInputRef = useRef<TextInput>(null);
+  const notesInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     getAllCategories().then((cats) => {
@@ -58,14 +64,44 @@ export default function AddStoreScreen() {
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
   const pickPhoto = async () => {
+    const remaining = MAX_PHOTOS - photos.length;
+    if (remaining <= 0) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
+      selectionLimit: remaining,
       quality: 0.8,
     });
     if (!result.canceled) {
-      setPhotos((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
+      setPhotos((prev) => [...prev, ...result.assets.slice(0, remaining).map((a) => a.uri)]);
     }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const movePhoto = (from: number, to: number) => {
+    setPhotos((prev) => {
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  };
+
+  const scrollToInput = (ref: React.RefObject<TextInput | null>) => {
+    setTimeout(() => {
+      const scrollNode = findNodeHandle(scrollRef.current);
+      if (!scrollNode) return;
+      ref.current?.measureLayout(
+        scrollNode,
+        (_x, y) => {
+          scrollRef.current?.scrollTo({ y: Math.max(y - 80, 0), animated: true });
+        },
+        () => {},
+      );
+    }, 100);
   };
 
   const useCurrentLocation = async () => {
@@ -139,7 +175,13 @@ export default function AddStoreScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.form} contentContainerStyle={{ paddingBottom: 40 }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      >
+      <ScrollView ref={scrollRef} style={styles.form} contentContainerStyle={{ paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>店家名稱 *</Text>
         <TextInput style={styles.input} value={name} onChangeText={setName}
           placeholder="輸入店家名稱" placeholderTextColor="#94a3b8" />
@@ -171,24 +213,68 @@ export default function AddStoreScreen() {
           <Text style={styles.currentLocBtnText}>{locatingCurrent ? '定位中...' : '使用目前位置'}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.label}>照片（選填）</Text>
-        <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
-          <Text style={styles.photoBtnText}>＋ 從相簿選取</Text>
-        </TouchableOpacity>
-        <ScrollView horizontal style={{ marginBottom: 16 }}>
-          {photos.map((uri, i) => (
-            <Image key={i} source={{ uri }} style={styles.photoThumb} />
-          ))}
-        </ScrollView>
+        <Text style={styles.label}>照片（選填，最多 {MAX_PHOTOS} 張）</Text>
+        {photos.length < MAX_PHOTOS && (
+          <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
+            <Text style={styles.photoBtnText}>＋ 從相簿選取（{photos.length}/{MAX_PHOTOS}）</Text>
+          </TouchableOpacity>
+        )}
+        {photos.length > 0 && (
+          <View style={styles.photoRow}>
+            {photos.map((uri, i) => (
+              <View key={uri + i} style={styles.photoItem}>
+                <Image source={{ uri }} style={styles.photoThumb} />
+                <TouchableOpacity style={styles.photoDeleteBtn} onPress={() => removePhoto(i)}>
+                  <Text style={styles.photoDeleteBtnText}>✕</Text>
+                </TouchableOpacity>
+                {photos.length > 1 && (
+                  <View style={styles.photoReorderRow}>
+                    <TouchableOpacity
+                      style={[styles.photoReorderBtn, i === 0 && styles.photoReorderBtnDisabled]}
+                      disabled={i === 0}
+                      onPress={() => movePhoto(i, i - 1)}
+                    >
+                      <Text style={styles.photoReorderBtnText}>◀</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.photoReorderBtn, i === photos.length - 1 && styles.photoReorderBtnDisabled]}
+                      disabled={i === photos.length - 1}
+                      onPress={() => movePhoto(i, i + 1)}
+                    >
+                      <Text style={styles.photoReorderBtnText}>▶</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
 
         <Text style={styles.label}>事件（選填）</Text>
-        <TextInput style={[styles.input, { height: 60 }]} value={event} onChangeText={setEvent}
-          placeholder="這次上門發生的事..." placeholderTextColor="#94a3b8" multiline />
+        <TextInput
+          ref={eventInputRef}
+          style={[styles.input, styles.textArea, { height: 90 }]}
+          value={event}
+          onChangeText={setEvent}
+          placeholder="這次上門發生的事..."
+          placeholderTextColor="#94a3b8"
+          multiline
+          textAlignVertical="top"
+          onFocus={() => scrollToInput(eventInputRef)}
+        />
 
         <Text style={styles.label}>備註（選填）</Text>
-        <TextInput style={[styles.input, { height: 80 }]} value={notes} onChangeText={setNotes}
-          multiline />
+        <TextInput
+          ref={notesInputRef}
+          style={[styles.input, styles.textArea, { height: 120 }]}
+          value={notes}
+          onChangeText={setNotes}
+          multiline
+          textAlignVertical="top"
+          onFocus={() => scrollToInput(notesInputRef)}
+        />
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <Modal visible={categoryPickerVisible} transparent animationType="fade" onRequestClose={() => setCategoryPickerVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCategoryPickerVisible(false)}>
@@ -246,5 +332,20 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: 10,
   },
   photoBtnText: { color: '#64748b', fontSize: 14 },
-  photoThumb: { width: 72, height: 72, borderRadius: 8, marginRight: 8 },
+  textArea: { paddingTop: 14 },
+  photoRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  photoItem: { alignItems: 'center' },
+  photoThumb: { width: 96, height: 96, borderRadius: 8 },
+  photoDeleteBtn: {
+    position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: 12,
+    backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center',
+  },
+  photoDeleteBtnText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  photoReorderRow: { flexDirection: 'row', gap: 6, marginTop: 6 },
+  photoReorderBtn: {
+    width: 32, height: 28, borderRadius: 6, backgroundColor: '#f1f5f9',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  photoReorderBtnDisabled: { opacity: 0.3 },
+  photoReorderBtnText: { color: '#475569', fontSize: 13, fontWeight: '700' },
 });
