@@ -22,7 +22,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="settings" />
-          <Stack.Screen name="store/add" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="store/add" />
           <Stack.Screen name="store/[id]" />
           <Stack.Screen name="category/[id]" />
           <Stack.Screen name="main" />
