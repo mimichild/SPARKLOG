@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Switch, ScrollView, Alert, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Switch, ScrollView, Alert, Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Notifications from 'expo-notifications';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getAllStores, insertStore, deleteAllStores } from '@/db/storeRepository';
 import { getAllCategories, insertCategory, deleteAllCategories } from '@/db/categoryRepository';
 import { serializeBackup, parseBackup } from '@/utils/exportImport';
+
+function getFriendlyFolderName(directoryUri: string): string {
+  try {
+    const decoded = decodeURIComponent(directoryUri);
+    const lastSegment = decoded.split(':').pop() ?? decoded;
+    return lastSegment.split('/').filter(Boolean).pop() || '所選資料夾';
+  } catch {
+    return '所選資料夾';
+  }
+}
 
 const PRESET_COLORS = [
   '#F0ABA7', '#EE9999', '#DAB7A7', '#CBB79F', '#F2E9A2', '#BAD8F3',
@@ -33,6 +43,31 @@ export default function SettingsScreen() {
     setThemeColor, setRadarEnabled, setRadarRatingThreshold, setRadarRadiusMeters,
   } = useSettingsStore();
   const [customHex, setCustomHex] = useState('');
+  const [progressModalVisible, setProgressModalVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressLabel, setProgressLabel] = useState('');
+  const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startProgress = (label: string) => {
+    setProgress(0);
+    setProgressLabel(label);
+    setProgressModalVisible(true);
+    progressInterval.current = setInterval(() => {
+      setProgress((p) => (p < 90 ? p + Math.ceil(Math.random() * 6) : p));
+    }, 40);
+  };
+
+  const finishProgress = async () => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    setProgress(100);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    setProgressModalVisible(false);
+  };
+
+  const abortProgress = () => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    setProgressModalVisible(false);
+  };
 
   const handleApplyCustomHex = () => {
     const hex = customHex.trim();
@@ -43,12 +78,38 @@ export default function SettingsScreen() {
     setThemeColor(hex);
   };
 
+  const runExport = async (directoryUri: string, folderName: string) => {
+    startProgress('匯出中，請稍候...');
+    try {
+      const [stores, categories] = await Promise.all([getAllStores(), getAllCategories()]);
+      const json = serializeBackup(stores, categories);
+      const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+        directoryUri, 'sparknotes-backup', 'application/json',
+      );
+      await FileSystem.writeAsStringAsync(fileUri, json);
+
+      await finishProgress();
+
+      Alert.alert('匯出完成', `備份已儲存至「${folderName}」`);
+      await Notifications.scheduleNotificationAsync({
+        content: { title: '備份已完成', body: `備份已匯出至「${folderName}」` },
+        trigger: null,
+      });
+    } catch {
+      abortProgress();
+      Alert.alert('匯出失敗', '請稍後再試');
+    }
+  };
+
   const handleExport = async () => {
-    const [stores, categories] = await Promise.all([getAllStores(), getAllCategories()]);
-    const json = serializeBackup(stores, categories);
-    const path = `${FileSystem.documentDirectory}sparknotes-backup.json`;
-    await FileSystem.writeAsStringAsync(path, json);
-    await Sharing.shareAsync(path);
+    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+    if (!permissions.granted) return;
+    const folderName = getFriendlyFolderName(permissions.directoryUri);
+
+    Alert.alert('匯出備份', `確定要將備份匯出到「${folderName}」嗎？`, [
+      { text: '取消', style: 'cancel' },
+      { text: '確認', onPress: () => runExport(permissions.directoryUri, folderName) },
+    ]);
   };
 
   const handleImport = async () => {
@@ -74,16 +135,30 @@ export default function SettingsScreen() {
       { text: '取消', style: 'cancel' },
       {
         text: '合併', onPress: async () => {
-          await importCategoriesAndStores();
-          Alert.alert('匯入完成');
+          startProgress('匯入中，請稍候...');
+          try {
+            await importCategoriesAndStores();
+            await finishProgress();
+            Alert.alert('匯入完成');
+          } catch {
+            abortProgress();
+            Alert.alert('匯入失敗', '請稍後再試');
+          }
         },
       },
       {
         text: '覆蓋', style: 'destructive', onPress: async () => {
-          await deleteAllStores();
-          await deleteAllCategories();
-          await importCategoriesAndStores();
-          Alert.alert('匯入完成');
+          startProgress('匯入中，請稍候...');
+          try {
+            await deleteAllStores();
+            await deleteAllCategories();
+            await importCategoriesAndStores();
+            await finishProgress();
+            Alert.alert('匯入完成');
+          } catch {
+            abortProgress();
+            Alert.alert('匯入失敗', '請稍後再試');
+          }
         },
       },
     ]);
@@ -169,6 +244,18 @@ export default function SettingsScreen() {
         </TouchableOpacity>
         <Text style={styles.backupCaption}>合併：新資料加入現有資料｜覆蓋：清除現有資料後還原</Text>
       </ScrollView>
+
+      <Modal visible={progressModalVisible} transparent animationType="fade">
+        <View style={styles.progressOverlay}>
+          <View style={styles.progressBox}>
+            <Text style={styles.progressPercent}>{progress}%</Text>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: themeColor }]} />
+            </View>
+            <Text style={styles.progressLabel}>{progressLabel}</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -209,4 +296,10 @@ const styles = StyleSheet.create({
   importBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, marginBottom: 10 },
   importBtnText: { fontSize: 15, fontWeight: '700' },
   backupCaption: { color: '#94a3b8', fontSize: 12, textAlign: 'center' },
+  progressOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  progressBox: { backgroundColor: '#ffffff', borderRadius: 16, padding: 28, width: '78%', alignItems: 'center' },
+  progressPercent: { color: '#0f172a', fontSize: 28, fontWeight: '700', marginBottom: 14 },
+  progressTrack: { width: '100%', height: 8, borderRadius: 4, backgroundColor: '#f1f5f9', overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 4 },
+  progressLabel: { color: '#64748b', fontSize: 13, marginTop: 14 },
 });
