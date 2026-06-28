@@ -9,7 +9,7 @@ interface Backup {
 
 export function serializeBackup(stores: Store[], categories: Category[]): string {
   const backup: Backup = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     categories,
     stores,
@@ -19,6 +19,18 @@ export function serializeBackup(stores: Store[], categories: Category[]): string
 
 export function parseBackup(json: string): { stores: Store[]; categories: Category[] } {
   const data = JSON.parse(json) as Backup;
-  if (data.version !== 1) throw new Error('Unsupported backup version');
+  if (data.version !== 2) throw new Error('Unsupported backup version');
   return { stores: data.stores, categories: data.categories };
+}
+
+export function photoFilename(uri: string): string {
+  return uri.split('/').pop() ?? uri;
+}
+
+export function stripPhotoPaths(store: Store): Store {
+  return { ...store, photos: store.photos.map(photoFilename) };
+}
+
+export function resolvePhotoPaths(store: Store, photosDir: string): Store {
+  return { ...store, photos: store.photos.map((name) => `${photosDir}${name}`) };
 }

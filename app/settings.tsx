@@ -8,7 +8,10 @@ import * as Notifications from 'expo-notifications';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getAllStores, insertStore, deleteAllStores } from '@/db/storeRepository';
 import { getAllCategories, insertCategory, deleteAllCategories } from '@/db/categoryRepository';
-import { serializeBackup, parseBackup } from '@/utils/exportImport';
+import { serializeBackup, parseBackup, photoFilename, stripPhotoPaths, resolvePhotoPaths } from '@/utils/exportImport';
+import { createBackupZip, extractBackupZip } from '@/utils/backupZip';
+import { PHOTOS_DIR, ensurePhotosDir, deletePhotoFiles } from '@/utils/photoStorage';
+import type { Store, Category } from '@/types';
 
 function getFriendlyFolderName(directoryUri: string): string {
   try {
@@ -82,11 +85,24 @@ export default function SettingsScreen() {
     startProgress('匯出中，請稍候...');
     try {
       const [stores, categories] = await Promise.all([getAllStores(), getAllCategories()]);
-      const json = serializeBackup(stores, categories);
-      const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
-        directoryUri, 'sparknotes-backup', 'application/json',
+
+      const photoResults = await Promise.allSettled(
+        stores.flatMap((s) => s.photos).map(async (uri) => ({
+          name: photoFilename(uri),
+          base64: await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 }),
+        })),
       );
-      await FileSystem.writeAsStringAsync(fileUri, json);
+      const photoEntries = photoResults
+        .filter((r): r is PromiseFulfilledResult<{ name: string; base64: string }> => r.status === 'fulfilled')
+        .map((r) => r.value);
+
+      const json = serializeBackup(stores.map(stripPhotoPaths), categories);
+      const zipBase64 = await createBackupZip(json, photoEntries);
+
+      const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+        directoryUri, 'sparknotes-backup', 'application/zip',
+      );
+      await FileSystem.writeAsStringAsync(fileUri, zipBase64, { encoding: FileSystem.EncodingType.Base64 });
 
       await finishProgress();
 
@@ -113,19 +129,41 @@ export default function SettingsScreen() {
   };
 
   const handleImport = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
-    if (result.canceled) return;
-    const json = await FileSystem.readAsStringAsync(result.assets[0].uri);
-    const { stores, categories } = parseBackup(json);
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'],
+    });
+    if (result.canceled || !result.assets?.length) return;
+
+    let stores: Store[];
+    let categories: Category[];
+    let photos: { name: string; base64: string }[];
+    try {
+      const zipBase64 = await FileSystem.readAsStringAsync(result.assets[0].uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const extracted = await extractBackupZip(zipBase64);
+      photos = extracted.photos;
+      ({ stores, categories } = parseBackup(extracted.manifest));
+    } catch {
+      Alert.alert('匯入失敗', '備份檔案無法讀取，請確認檔案是否正確');
+      return;
+    }
 
     const importCategoriesAndStores = async () => {
+      await ensurePhotosDir();
+      for (const photo of photos) {
+        await FileSystem.writeAsStringAsync(`${PHOTOS_DIR}${photo.name}`, photo.base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      }
+
       const idMap: Record<string, string> = {};
       for (const c of categories) {
         const inserted = await insertCategory(c.name, c.emoji);
         idMap[c.id] = inserted.id;
       }
       for (const s of stores) {
-        const { id: _id, createdAt: _createdAt, ...rest } = s;
+        const { id: _id, createdAt: _createdAt, ...rest } = resolvePhotoPaths(s, PHOTOS_DIR);
         const mappedCategoryId = idMap[s.categoryId] ?? s.categoryId;
         await insertStore({ ...rest, categoryId: mappedCategoryId });
       }
@@ -150,7 +188,9 @@ export default function SettingsScreen() {
         text: '覆蓋', style: 'destructive', onPress: async () => {
           startProgress('匯入中，請稍候...');
           try {
+            const existingStores = await getAllStores();
             await deleteAllStores();
+            await deletePhotoFiles(existingStores.flatMap((s) => s.photos));
             await deleteAllCategories();
             await importCategoriesAndStores();
             await finishProgress();
@@ -169,7 +209,9 @@ export default function SettingsScreen() {
       { text: '取消', style: 'cancel' },
       {
         text: '清除', style: 'destructive', onPress: async () => {
+          const existingStores = await getAllStores();
           await deleteAllStores();
+          await deletePhotoFiles(existingStores.flatMap((s) => s.photos));
           Alert.alert('已清除所有店家資料');
         },
       },

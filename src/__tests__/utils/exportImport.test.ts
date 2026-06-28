@@ -1,4 +1,4 @@
-import { serializeBackup, parseBackup } from '@/utils/exportImport';
+import { serializeBackup, parseBackup, photoFilename, stripPhotoPaths, resolvePhotoPaths } from '@/utils/exportImport';
 import type { Store, Category } from '@/types';
 
 const cat: Category = { id: 'c1', name: '咖啡廳', emoji: '☕', order: 0 };
@@ -12,7 +12,7 @@ const store: Store = {
 test('serializeBackup produces valid JSON string', () => {
   const json = serializeBackup([store], [cat]);
   const parsed = JSON.parse(json);
-  expect(parsed.version).toBe(1);
+  expect(parsed.version).toBe(2);
   expect(parsed.stores).toHaveLength(1);
   expect(parsed.categories).toHaveLength(1);
 });
@@ -32,4 +32,24 @@ test('parseBackup throws on invalid JSON', () => {
 test('parseBackup throws on wrong version', () => {
   const bad = JSON.stringify({ version: 99, stores: [], categories: [] });
   expect(() => parseBackup(bad)).toThrow('Unsupported backup version');
+});
+
+test('photoFilename extracts the last path segment from a file URI', () => {
+  expect(photoFilename('file:///data/user/0/com.sparknotes.app/files/photos/abc.jpg')).toBe('abc.jpg');
+});
+
+test('photoFilename returns bare filenames unchanged', () => {
+  expect(photoFilename('abc.jpg')).toBe('abc.jpg');
+});
+
+test('stripPhotoPaths replaces each photo URI with its bare filename', () => {
+  const withPhotos: Store = { ...store, photos: ['file:///docs/photos/a.jpg', 'file:///docs/photos/b.jpg'] };
+  const result = stripPhotoPaths(withPhotos);
+  expect(result.photos).toEqual(['a.jpg', 'b.jpg']);
+});
+
+test('resolvePhotoPaths prefixes each bare filename with the given directory', () => {
+  const withFilenames: Store = { ...store, photos: ['a.jpg', 'b.jpg'] };
+  const result = resolvePhotoPaths(withFilenames, 'file:///docs/photos/');
+  expect(result.photos).toEqual(['file:///docs/photos/a.jpg', 'file:///docs/photos/b.jpg']);
 });

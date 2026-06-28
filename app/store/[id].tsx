@@ -10,6 +10,7 @@ import { getStoreById, deleteStore } from '@/db/storeRepository';
 import { getAllCategories } from '@/db/categoryRepository';
 import HeartRating from '@/components/HeartRating';
 import { useSettingsStore } from '@/store/settingsStore';
+import { deletePhotoFiles } from '@/utils/photoStorage';
 
 const { width } = Dimensions.get('window');
 
@@ -31,7 +32,11 @@ export default function StoreDetailScreen() {
     if (!store) return;
     Alert.alert('刪除店家', `確定要刪除「${store.name}」？`, [
       { text: '取消', style: 'cancel' },
-      { text: '刪除', style: 'destructive', onPress: async () => { await deleteStore(store.id); router.back(); } },
+      { text: '刪除', style: 'destructive', onPress: async () => {
+        await deleteStore(store.id);
+        await deletePhotoFiles(store.photos);
+        router.back();
+      } },
     ]);
   };
 

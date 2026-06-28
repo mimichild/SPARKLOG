@@ -8,7 +8,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { Category } from '@/types';
 import {
-  getAllCategories, insertCategory, deleteCategory, reorderCategories,
+  getAllCategories, insertCategory, updateCategory, deleteCategory, reorderCategories,
 } from '@/db/categoryRepository';
 import { getAllStores } from '@/db/storeRepository';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -25,6 +25,8 @@ export default function CategoriesScreen() {
   const [editSheetVisible, setEditSheetVisible] = useState(false);
   const [addingNew, setAddingNew] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [renamingCategory, setRenamingCategory] = useState<Category | null>(null);
+  const [renameText, setRenameText] = useState('');
 
   const load = useCallback(async () => {
     const [cats, stores] = await Promise.all([getAllCategories(), getAllStores()]);
@@ -43,6 +45,16 @@ export default function CategoriesScreen() {
     await insertCategory(newCategoryName.trim(), '');
     setNewCategoryName('');
     setAddingNew(false);
+    load();
+  };
+
+  const openRename = (cat: Category) => { setRenamingCategory(cat); setRenameText(cat.name); };
+
+  const handleRename = async () => {
+    if (!renamingCategory) return;
+    if (!renameText.trim()) { Alert.alert('請輸入分類名稱'); return; }
+    await updateCategory(renamingCategory.id, renameText.trim(), '');
+    setRenamingCategory(null);
     load();
   };
 
@@ -130,17 +142,20 @@ export default function CategoriesScreen() {
                     onPress={() => moveCategory(index, -1)}
                     disabled={index === 0}
                   >
-                    <Ionicons name="chevron-up" size={18} color={index === 0 ? '#cbd5e1' : '#64748b'} />
+                    <Text style={[styles.reorderArrowText, index === 0 && styles.reorderArrowDisabled]}>▲</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.reorderArrowBtn}
                     onPress={() => moveCategory(index, 1)}
                     disabled={index === categories.length - 1}
                   >
-                    <Ionicons name="chevron-down" size={18} color={index === categories.length - 1 ? '#cbd5e1' : '#64748b'} />
+                    <Text style={[styles.reorderArrowText, index === categories.length - 1 && styles.reorderArrowDisabled]}>▼</Text>
                   </TouchableOpacity>
                   <Text style={styles.reorderName} numberOfLines={1}>{item.name}</Text>
                   <Text style={styles.reorderCount}>{counts[item.id] ?? 0} 家</Text>
+                  <TouchableOpacity style={styles.reorderEditBtn} onPress={() => openRename(item)}>
+                    <Ionicons name="pencil-outline" size={17} color="#64748b" />
+                  </TouchableOpacity>
                   <TouchableOpacity style={styles.reorderDeleteBtn} onPress={() => handleDelete(item)}>
                     <Ionicons name="trash-outline" size={18} color="#ef4444" />
                   </TouchableOpacity>
@@ -154,6 +169,30 @@ export default function CategoriesScreen() {
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setEditSheetVisible(false)}>
                 <Text style={[styles.modalSave, { color: themeColor }]}>儲存</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={!!renamingCategory} transparent animationType="fade" onRequestClose={() => setRenamingCategory(null)}>
+        <View style={styles.renameOverlay}>
+          <View style={styles.renameDialog}>
+            <Text style={styles.renameTitle}>修改分類名稱</Text>
+            <TextInput
+              style={styles.renameInput}
+              value={renameText}
+              onChangeText={setRenameText}
+              placeholder="分類名稱"
+              placeholderTextColor="#94a3b8"
+              autoFocus
+            />
+            <View style={styles.renameActions}>
+              <TouchableOpacity style={styles.renameCancelBtn} onPress={() => setRenamingCategory(null)}>
+                <Text style={styles.renameCancelText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.renameConfirmBtn, { backgroundColor: themeColor }]} onPress={handleRename}>
+                <Text style={styles.renameConfirmText}>確認</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -205,9 +244,24 @@ const styles = StyleSheet.create({
     paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
   },
   reorderArrowBtn: { padding: 4 },
+  reorderArrowText: { color: '#475569', fontSize: 13, fontWeight: '700' },
+  reorderArrowDisabled: { color: '#cbd5e1' },
   reorderName: { flex: 1, color: '#0f172a', fontSize: 15, marginLeft: 6 },
   reorderCount: { color: '#94a3b8', fontSize: 12, marginRight: 8 },
+  reorderEditBtn: { padding: 4, marginRight: 2 },
   reorderDeleteBtn: { padding: 4 },
+  renameOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
+  renameDialog: { backgroundColor: '#ffffff', borderRadius: 16, padding: 24, width: '100%' },
+  renameTitle: { color: '#0f172a', fontSize: 16, fontWeight: '600', marginBottom: 16 },
+  renameInput: {
+    backgroundColor: '#f1f5f9', color: '#0f172a', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, marginBottom: 20,
+  },
+  renameActions: { flexDirection: 'row', gap: 12 },
+  renameCancelBtn: { flex: 1, borderRadius: 10, paddingVertical: 11, backgroundColor: '#f1f5f9', alignItems: 'center' },
+  renameCancelText: { color: '#64748b', fontSize: 15, fontWeight: '600' },
+  renameConfirmBtn: { flex: 1, borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
+  renameConfirmText: { color: '#ffffff', fontSize: 15, fontWeight: '600' },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 20, marginTop: 16 },
   modalCancel: { color: '#64748b', fontSize: 16 },
   modalSave: { fontSize: 16, fontWeight: '600' },

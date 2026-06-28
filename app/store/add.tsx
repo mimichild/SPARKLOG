@@ -7,6 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import * as FileSystem from 'expo-file-system/legacy';
+import { v4 as uuid } from 'uuid';
+import { PHOTOS_DIR, ensurePhotosDir } from '@/utils/photoStorage';
 import type { Category } from '@/types';
 import { getAllCategories } from '@/db/categoryRepository';
 import { insertStore, updateStore, getStoreById } from '@/db/storeRepository';
@@ -14,6 +17,14 @@ import HeartRating from '@/components/HeartRating';
 import { useSettingsStore } from '@/store/settingsStore';
 
 const MAX_PHOTOS = 2;
+
+async function persistPickedPhoto(sourceUri: string): Promise<string> {
+  await ensurePhotosDir();
+  const extension = sourceUri.split('.').pop()?.split(/[#?]/)[0] || 'jpg';
+  const destUri = `${PHOTOS_DIR}${uuid()}.${extension}`;
+  await FileSystem.copyAsync({ from: sourceUri, to: destUri });
+  return destUri;
+}
 
 export default function AddStoreScreen() {
   const router = useRouter();
@@ -73,12 +84,17 @@ export default function AddStoreScreen() {
       quality: 0.8,
     });
     if (!result.canceled) {
-      setPhotos((prev) => [...prev, ...result.assets.slice(0, remaining).map((a) => a.uri)]);
+      const persisted = await Promise.all(
+        result.assets.slice(0, remaining).map((a) => persistPickedPhoto(a.uri)),
+      );
+      setPhotos((prev) => [...prev, ...persisted]);
     }
   };
 
   const removePhoto = (index: number) => {
+    const [removed] = photos.slice(index, index + 1);
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    if (removed) FileSystem.deleteAsync(removed, { idempotent: true }).catch(() => {});
   };
 
   const movePhoto = (from: number, to: number) => {
@@ -279,17 +295,19 @@ export default function AddStoreScreen() {
       <Modal visible={categoryPickerVisible} transparent animationType="fade" onRequestClose={() => setCategoryPickerVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCategoryPickerVisible(false)}>
           <View style={styles.dropdownList}>
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat.id}
-                style={styles.dropdownItem}
-                onPress={() => { setCategoryId(cat.id); setCategoryPickerVisible(false); }}
-              >
-                <Text style={[styles.dropdownItemText, categoryId === cat.id && { color: themeColor, fontWeight: '700' }]}>
-                  {cat.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={styles.dropdownItem}
+                  onPress={() => { setCategoryId(cat.id); setCategoryPickerVisible(false); }}
+                >
+                  <Text style={[styles.dropdownItemText, categoryId === cat.id && { color: themeColor, fontWeight: '700' }]}>
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </TouchableOpacity>
       </Modal>

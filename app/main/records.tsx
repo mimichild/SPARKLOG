@@ -11,6 +11,7 @@ import { getAllCategories } from '@/db/categoryRepository';
 import StoreCard from '@/components/StoreCard';
 import FAB from '@/components/FAB';
 import { useSettingsStore } from '@/store/settingsStore';
+import { deletePhotoFiles } from '@/utils/photoStorage';
 
 export default function RecordsScreen() {
   const router = useRouter();
@@ -40,7 +41,11 @@ export default function RecordsScreen() {
   const handleLongPress = (store: Store) => {
     Alert.alert('刪除店家', `確定要刪除「${store.name}」？`, [
       { text: '取消', style: 'cancel' },
-      { text: '刪除', style: 'destructive', onPress: async () => { await deleteStore(store.id); load(); } },
+      { text: '刪除', style: 'destructive', onPress: async () => {
+        await deleteStore(store.id);
+        await deletePhotoFiles(store.photos);
+        load();
+      } },
     ]);
   };
 
