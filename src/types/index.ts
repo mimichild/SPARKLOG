@@ -20,8 +20,5 @@ export interface Category {
 }
 
 export interface AppSettings {
-  themeColor: string;              // hex, accent color only — never background/dark mode
-  radarEnabled: boolean;
-  radarRatingThreshold: number;    // stores with rating <= this trigger the radar
-  radarRadiusMeters: number;
+  themeColor: string;
 }

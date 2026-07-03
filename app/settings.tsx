@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Switch, ScrollView, Alert, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -27,24 +27,10 @@ const PRESET_COLORS = [
   '#F0ABA7', '#EE9999', '#DAB7A7', '#CBB79F', '#F2E9A2', '#BAD8F3',
   '#7C2D43', '#A6C7E7', '#B7E2D3', '#FED2DC', '#F8D7B0', '#D8C4E9',
 ];
-const RATING_OPTIONS = [
-  { label: '1星', value: 1 },
-  { label: '2星以下', value: 2 },
-  { label: '3星以下', value: 3 },
-];
-const RADIUS_OPTIONS = [
-  { label: '100m', value: 100 },
-  { label: '300m', value: 300 },
-  { label: '500m', value: 500 },
-  { label: '1km', value: 1000 },
-];
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const {
-    themeColor, radarEnabled, radarRatingThreshold, radarRadiusMeters,
-    setThemeColor, setRadarEnabled, setRadarRatingThreshold, setRadarRadiusMeters,
-  } = useSettingsStore();
+  const { themeColor, setThemeColor } = useSettingsStore();
   const [customHex, setCustomHex] = useState('');
   const [progressModalVisible, setProgressModalVisible] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -257,38 +243,6 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.section}>心級雷達</Text>
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>開啟雷店預警通知</Text>
-          <Switch value={radarEnabled} onValueChange={setRadarEnabled} trackColor={{ true: themeColor }} />
-        </View>
-
-        <Text style={styles.subLabel}>幾顆心以下開啟雷達</Text>
-        <View style={styles.optionRow}>
-          {RATING_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.value}
-              style={[styles.optionChip, radarRatingThreshold === opt.value && { backgroundColor: themeColor }]}
-              onPress={() => setRadarRatingThreshold(opt.value)}
-            >
-              <Text style={[styles.optionText, radarRatingThreshold === opt.value && styles.optionTextActive]}>{opt.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.subLabel}>幾公尺內提醒</Text>
-        <View style={styles.optionRow}>
-          {RADIUS_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.value}
-              style={[styles.optionChip, radarRadiusMeters === opt.value && { backgroundColor: themeColor }]}
-              onPress={() => setRadarRadiusMeters(opt.value)}
-            >
-              <Text style={[styles.optionText, radarRadiusMeters === opt.value && styles.optionTextActive]}>{opt.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         <Text style={styles.section}>備份與還原</Text>
         <TouchableOpacity style={[styles.exportBtn, { backgroundColor: themeColor }]} onPress={handleExport}>
           <Text style={styles.exportBtnText}>匯出備份</Text>
@@ -343,12 +297,6 @@ const styles = StyleSheet.create({
   },
   applyBtn: { borderRadius: 10, paddingHorizontal: 20, paddingVertical: 11 },
   applyBtnText: { color: '#ffffff', fontSize: 14, fontWeight: '700' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
-  rowLabel: { color: '#0f172a', fontSize: 15 },
-  optionRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  optionChip: { backgroundColor: '#f1f5f9', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
-  optionText: { color: '#0f172a', fontSize: 13 },
-  optionTextActive: { color: '#ffffff' },
   exportBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
   exportBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
   importBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, marginBottom: 10 },

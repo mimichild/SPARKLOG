@@ -5,15 +5,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { seedCategoriesIfEmpty } from '@/db/categoryRepository';
 import { removeSampleStoresIfPresent } from '@/db/storeRepository';
-import { registerBackgroundTask } from '@/tasks/locationTask';
-
 export default function RootLayout() {
   useEffect(() => {
     (async () => {
       await seedCategoriesIfEmpty();
       await removeSampleStoresIfPresent();
     })();
-    registerBackgroundTask();
   }, []);
 
   return (

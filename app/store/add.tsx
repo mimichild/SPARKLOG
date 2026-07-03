@@ -143,12 +143,11 @@ export default function AddStoreScreen() {
   const handleSave = async () => {
     if (!name.trim()) { Alert.alert('請輸入店家名稱'); return; }
     if (!categoryId) { Alert.alert('請選擇分類'); return; }
-    if (!address.trim()) { Alert.alert('請輸入店家地址或使用目前位置'); return; }
 
-    let finalLatitude = latitude;
-    let finalLongitude = longitude;
+    let finalLatitude = latitude ?? 0;
+    let finalLongitude = longitude ?? 0;
 
-    if (addressDirty || finalLatitude === null || finalLongitude === null) {
+    if (address.trim() && (addressDirty || latitude === null || longitude === null)) {
       setSaving(true);
       try {
         const results = await Location.geocodeAsync(address.trim());
@@ -213,7 +212,7 @@ export default function AddStoreScreen() {
           <HeartRating value={rating} themeColor={themeColor} onPress={(v) => setRating(v as 1 | 2 | 3 | 4 | 5)} size={28} />
         </View>
 
-        <Text style={styles.label}>地址 *</Text>
+        <Text style={styles.label}>地址（選填）</Text>
         <TextInput
           style={styles.input}
           value={address}
