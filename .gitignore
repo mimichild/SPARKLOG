@@ -40,6 +40,8 @@ yarn-error.*
 /ios
 /android
 
-# Superpowers & Claude
+# Superpowers
 .superpowers/
-.claude/
+
+# Claude Code local settings
+.claude/settings.local.json
