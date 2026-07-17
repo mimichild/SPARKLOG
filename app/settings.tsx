@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Modal, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Notifications from 'expo-notifications';
+import * as Sharing from 'expo-sharing';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getAllStores, insertStore, deleteAllStores } from '@/db/storeRepository';
 import { getAllCategories, insertCategory, deleteAllCategories } from '@/db/categoryRepository';
@@ -67,23 +68,27 @@ export default function SettingsScreen() {
     setThemeColor(hex);
   };
 
+  const buildBackupZip = async () => {
+    const [stores, categories] = await Promise.all([getAllStores(), getAllCategories()]);
+
+    const photoResults = await Promise.allSettled(
+      stores.flatMap((s) => s.photos).map(async (uri) => ({
+        name: photoFilename(uri),
+        base64: await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 }),
+      })),
+    );
+    const photoEntries = photoResults
+      .filter((r): r is PromiseFulfilledResult<{ name: string; base64: string }> => r.status === 'fulfilled')
+      .map((r) => r.value);
+
+    const json = serializeBackup(stores.map(stripPhotoPaths), categories);
+    return createBackupZip(json, photoEntries);
+  };
+
   const runExport = async (directoryUri: string, folderName: string) => {
     startProgress('匯出中，請稍候...');
     try {
-      const [stores, categories] = await Promise.all([getAllStores(), getAllCategories()]);
-
-      const photoResults = await Promise.allSettled(
-        stores.flatMap((s) => s.photos).map(async (uri) => ({
-          name: photoFilename(uri),
-          base64: await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 }),
-        })),
-      );
-      const photoEntries = photoResults
-        .filter((r): r is PromiseFulfilledResult<{ name: string; base64: string }> => r.status === 'fulfilled')
-        .map((r) => r.value);
-
-      const json = serializeBackup(stores.map(stripPhotoPaths), categories);
-      const zipBase64 = await createBackupZip(json, photoEntries);
+      const zipBase64 = await buildBackupZip();
 
       const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
         directoryUri, 'sparknotes-backup', 'application/zip',
@@ -103,7 +108,54 @@ export default function SettingsScreen() {
     }
   };
 
+  // iOS 沒有 StorageAccessFramework（那是 Android 專屬的「選擇資料夾」機制），
+  // 存到 documentDirectory：因為 app.json 開了 UIFileSharingEnabled +
+  // LSSupportsOpeningDocumentsInPlace，這個資料夾會直接出現在「檔案」App
+  // 的「我的 iPhone > SPARKNOTES」裡，不必依賴分享面板「儲存到檔案」是否
+  // 真的有成功（之前用 cacheDirectory + 分享面板時，使用者反應存了之後在
+  // 「檔案」App 裡完全搜不到）。分享面板仍然保留，方便直接傳給別人。
+  const runExportShare = async () => {
+    startProgress('匯出中，請稍候...');
+    try {
+      const zipBase64 = await buildBackupZip();
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      const fileUri = `${FileSystem.documentDirectory}sparknotes-backup-${stamp}.zip`;
+      await FileSystem.writeAsStringAsync(fileUri, zipBase64, { encoding: FileSystem.EncodingType.Base64 });
+
+      await finishProgress();
+
+      Alert.alert(
+        '匯出完成',
+        `備份已存到「檔案」App 的「我的 iPhone / SPARKNOTES」資料夾（sparknotes-backup-${stamp}.zip）。\n\n也可以在接下來的分享視窗選擇傳送給其他 App。`,
+      );
+
+      const available = await Sharing.isAvailableAsync();
+      if (available) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/zip',
+          dialogTitle: 'SPARKNOTE 備份',
+        });
+      }
+    } catch {
+      abortProgress();
+      Alert.alert('匯出失敗', '請稍後再試');
+    }
+  };
+
   const handleExport = async () => {
+    if (Platform.OS !== 'android') {
+      Alert.alert(
+        '匯出備份',
+        '將所有店家與照片打包成 ZIP 檔案。\n\n完成後開啟分享視窗，選擇「儲存至檔案」即可存至手機。',
+        [
+          { text: '取消', style: 'cancel' },
+          { text: '確認匯出', onPress: () => runExportShare() },
+        ],
+      );
+      return;
+    }
+
     const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
     if (!permissions.granted) return;
     const folderName = getFriendlyFolderName(permissions.directoryUri);

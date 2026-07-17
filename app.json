@@ -25,7 +25,9 @@
       "bundleIdentifier": "com.sparknotes.app",
       "infoPlist": {
         "NSLocationAlwaysAndWhenInUseUsageDescription": "需要定位權限以提供雷店接近提醒",
-        "NSLocationWhenInUseUsageDescription": "需要定位權限以記錄店家位置"
+        "NSLocationWhenInUseUsageDescription": "需要定位權限以記錄店家位置",
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true
       }
     },
     "web": {
@@ -41,7 +43,8 @@
         }
       ],
       "expo-notifications",
-      "expo-asset"
+      "expo-asset",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true
