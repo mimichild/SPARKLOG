@@ -1,11 +1,10 @@
 import { useSettingsStore } from '@/store/settingsStore';
 
+// 雷達（心級雷達/雷店預警）功能已於 0c60085 整個移除，store 只剩 themeColor
+
 test('has correct default values', () => {
   const state = useSettingsStore.getState();
   expect(state.themeColor).toBe('#6c63ff');
-  expect(state.radarEnabled).toBe(true);
-  expect(state.radarRatingThreshold).toBe(2);
-  expect(state.radarRadiusMeters).toBe(500);
 });
 
 test('setThemeColor updates themeColor', () => {
@@ -13,17 +12,9 @@ test('setThemeColor updates themeColor', () => {
   expect(useSettingsStore.getState().themeColor).toBe('#ef4444');
 });
 
-test('setRadarEnabled updates radarEnabled', () => {
-  useSettingsStore.getState().setRadarEnabled(false);
-  expect(useSettingsStore.getState().radarEnabled).toBe(false);
-});
-
-test('setRadarRatingThreshold updates radarRatingThreshold', () => {
-  useSettingsStore.getState().setRadarRatingThreshold(1);
-  expect(useSettingsStore.getState().radarRatingThreshold).toBe(1);
-});
-
-test('setRadarRadiusMeters updates radarRadiusMeters', () => {
-  useSettingsStore.getState().setRadarRadiusMeters(300);
-  expect(useSettingsStore.getState().radarRadiusMeters).toBe(300);
+test('store does not expose removed radar settings', () => {
+  const state = useSettingsStore.getState() as Record<string, unknown>;
+  expect(state.radarEnabled).toBeUndefined();
+  expect(state.radarRatingThreshold).toBeUndefined();
+  expect(state.radarRadiusMeters).toBeUndefined();
 });

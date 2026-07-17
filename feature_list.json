@@ -1,0 +1,92 @@
+{
+  "project": "SPARKNOTE",
+  "last_updated": "2026-07-17",
+  "rules": {
+    "single_active_feature": true,
+    "passing_requires_evidence": true,
+    "do_not_skip_verification": true,
+    "evidence_format": "YYYY-MM-DD | 實際執行的指令 | 關鍵輸出摘要",
+    "details": "狀態機、證據判準與範例見 docs/harness/PLAYBOOK.md"
+  },
+  "status_legend": {
+    "not_started": "尚未開始。",
+    "in_progress": "目前唯一正在進行的功能。",
+    "blocked": "因已記錄的問題無法繼續；notes 必須寫明現象、已嘗試方法、建議解法。",
+    "passing": "verification 全部實際執行過，且 evidence 已依格式記錄。"
+  },
+  "features": [
+    {
+      "id": "ios-001",
+      "priority": 1,
+      "area": "ios",
+      "title": "iOS 模擬器啟動 App 並截圖存證",
+      "user_visible_behavior": "在 iOS 模擬器上可以看到 SPARKNOTE 啟動並顯示首頁。",
+      "status": "not_started",
+      "verification": [
+        "執行 npx expo run:ios。",
+        "確認建置成功且模擬器開啟 App、首頁正常渲染無紅屏。",
+        "擷取模擬器截圖存入 docs/ 作為證據。"
+      ],
+      "evidence": [],
+      "notes": "本專案是 Expo SDK 56（其他四個是 54），建置行為可能不同；roadmap 建議放五個 App 的最後。若踩到 RCTBridge 問題，比照 SPARKSHAPE/SPARKPLATE 的 AppDelegate 修法。"
+    },
+    {
+      "id": "ios-002",
+      "priority": 2,
+      "area": "ios",
+      "title": "模擬器驗證核心流程：資料庫讀寫與定位權限",
+      "user_visible_behavior": "使用者在 iOS 模擬器上能新增店家筆記、看到定位權限彈窗、重啟後資料仍在。",
+      "status": "not_started",
+      "verification": [
+        "在模擬器新增一筆店家（地址欄位可留空）。",
+        "確認定位權限彈窗出現且允許後地圖/定位功能不閃退（模擬器可用 Features > Location 模擬座標）。",
+        "完全關閉 App 再重開，確認資料仍存在。"
+      ],
+      "evidence": [],
+      "notes": "雷達/預警通知功能已於 0c60085 移除，不在驗證範圍。"
+    },
+    {
+      "id": "ios-003",
+      "priority": 3,
+      "area": "ios",
+      "title": "模擬器驗證 ZIP 匯出/匯入",
+      "user_visible_behavior": "使用者在 iOS 上能匯出 ZIP 備份並成功匯入還原。",
+      "status": "not_started",
+      "verification": [
+        "建立測試資料後執行匯出，確認 ZIP 產生且分享面板出現。",
+        "清空資料後匯入，確認資料完整還原。"
+      ],
+      "evidence": [],
+      "notes": ""
+    },
+    {
+      "id": "ios-004",
+      "priority": 4,
+      "area": "ios",
+      "title": "EAS iOS 雲端建置成功",
+      "user_visible_behavior": "EAS Build 產出可安裝的 iOS build。",
+      "status": "not_started",
+      "verification": [
+        "確認 Apple Developer 帳號可用、建立 eas.json（參考 SPARKWEAR）。",
+        "執行 eas build --platform ios。",
+        "確認 expo.dev 建置狀態 finished，記錄 build URL。"
+      ],
+      "evidence": [],
+      "notes": "前置：Apple Developer Program。本專案目前沒有 eas.json。"
+    },
+    {
+      "id": "ios-005",
+      "priority": 5,
+      "area": "ios",
+      "title": "TestFlight 內部測試",
+      "user_visible_behavior": "使用者的 iPhone 能從 TestFlight 安裝並正常使用核心功能（含真實定位）。",
+      "status": "not_started",
+      "verification": [
+        "eas submit --platform ios 並加入內部測試群組。",
+        "實機安裝啟動，重跑 ios-002 核心流程。"
+      ],
+      "evidence": [],
+      "notes": "依賴 ios-004。"
+    }
+  ]
+}
