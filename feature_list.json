@@ -21,14 +21,17 @@
       "area": "ios",
       "title": "iOS 模擬器啟動 App 並截圖存證",
       "user_visible_behavior": "在 iOS 模擬器上可以看到 SPARKNOTE 啟動並顯示首頁。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "執行 npx expo run:ios。",
         "確認建置成功且模擬器開啟 App、首頁正常渲染無紅屏。",
         "擷取模擬器截圖存入 docs/ 作為證據。"
       ],
-      "evidence": [],
-      "notes": "本專案是 Expo SDK 56（其他四個是 54），建置行為可能不同；roadmap 建議放五個 App 的最後。若踩到 RCTBridge 問題，比照 SPARKSHAPE/SPARKPLATE 的 AppDelegate 修法。"
+      "evidence": [
+        "2026-07-20 | npx expo run:ios | 第一次 build（本專案先前從未 build 過 iOS，SDK 56），Build Succeeded，0 error(s)，沒有踩到 RCTBridge/fmt 問題，安裝並開啟於 iPhone 17 Pro 模擬器",
+        "2026-07-20 | xcrun simctl io booted screenshot docs/ios-001-simulator-home.png | 首頁正常顯示「SPARK NOTE」標題與開始使用/設定按鈕，無紅屏錯誤"
+      ],
+      "notes": "本專案是 Expo SDK 56（其他四個是 54），首次建置順利通過，沒有踩到其他專案遇過的 RCTBridge/fmt 原生層問題，不需要 native-001 這類項目。"
     },
     {
       "id": "ios-002",
