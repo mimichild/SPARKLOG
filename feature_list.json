@@ -39,13 +39,17 @@
       "area": "ios",
       "title": "模擬器驗證核心流程：資料庫讀寫與定位權限",
       "user_visible_behavior": "使用者在 iOS 模擬器上能新增店家筆記、看到定位權限彈窗、重啟後資料仍在。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "在模擬器新增一筆店家（地址欄位可留空）。",
         "確認定位權限彈窗出現且允許後地圖/定位功能不閃退（模擬器可用 Features > Location 模擬座標）。",
         "完全關閉 App 再重開，確認資料仍存在。"
       ],
-      "evidence": [],
+      "evidence": [
+        "2026-07-20 | 使用者手動操作：新增店家紀錄 | 成功，畫面正常無閃退",
+        "2026-07-20 | sqlite3 直接查容器內 sparknotes.db（含 -wal/-shm）| stores 表新增記錄，含正確的 latitude/longitude（37.785834, -122.406417，模擬器預設座標），確認定位功能正常運作",
+        "2026-07-20 | xcrun simctl terminate + launch 後再次 sqlite3 查詢 | stores 表 3 筆記錄皆仍存在，資料持久化正常；截圖 docs/ios-002-store-persist.png"
+      ],
       "notes": "雷達/預警通知功能已於 0c60085 移除，不在驗證範圍。"
     },
     {
