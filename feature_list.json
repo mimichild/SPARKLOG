@@ -58,13 +58,18 @@
       "area": "ios",
       "title": "模擬器驗證 ZIP 匯出/匯入",
       "user_visible_behavior": "使用者在 iOS 上能匯出 ZIP 備份並成功匯入還原。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "建立測試資料後執行匯出，確認 ZIP 產生且分享面板出現。",
         "清空資料後匯入，確認資料完整還原。"
       ],
-      "evidence": [],
-      "notes": ""
+      "evidence": [
+        "2026-07-20 | 使用者手動操作：設定 → 匯出備份 | 分享面板正常出現，ZIP 產生於 Documents（sparknotes-backup-2026-07-20.zip）",
+        "2026-07-20 | 解壓縮剛匯出的 ZIP 檢查 backup.json | stores 陣列正確含 3 筆記錄，id/name/createdAt 都跟匯出當下的資料庫內容一致，證實匯出功能本身正確",
+        "2026-07-20 | 使用者手動操作：匯入（覆蓋模式）| 第一次誤選到容器內殘留的舊備份（2026-07-17，session 開始前就存在的檔案），資料庫變成 2 筆不相干的舊記錄——排查後確認是選錯檔案，不是匯出/匯入邏輯的 bug",
+        "2026-07-20 | 使用者重新操作：匯入（覆蓋模式，這次選對 2026-07-20 的檔案）| sqlite3 直接查容器內 sparknotes.db 確認 3 筆記錄正確還原（id/createdAt 於匯入時重新產生，name 對應正確：22、22、11），畫面正常無閃退、無卡死；截圖 docs/ios-003-import-result.png"
+      ],
+      "notes": "驗證過程中一度因為選錯備份檔案誤判成 bug，已排查釐清：真正的匯出/匯入邏輯本身沒有問題。"
     },
     {
       "id": "ios-004",
@@ -72,14 +77,14 @@
       "area": "ios",
       "title": "EAS iOS 雲端建置成功",
       "user_visible_behavior": "EAS Build 產出可安裝的 iOS build。",
-      "status": "not_started",
+      "status": "blocked",
       "verification": [
         "確認 Apple Developer 帳號可用、建立 eas.json（參考 SPARKWEAR）。",
         "執行 eas build --platform ios。",
         "確認 expo.dev 建置狀態 finished，記錄 build URL。"
       ],
       "evidence": [],
-      "notes": "前置：Apple Developer Program。本專案目前沒有 eas.json。"
+      "notes": "2026-07-20 blocked：ios-001～ios-003 皆已完成，唯一前置條件剩 Apple Developer Program（$99/年）尚未申請，需使用者決定是否付費申請。已嘗試：無需嘗試，純屬外部帳號申請前置。建議解法：使用者申請 Apple Developer Program 後再回來繼續；帳號未辦好前不要空等此項。本專案目前沒有 eas.json，需在申請帳號後一併建立（可參考 SPARKWEAR 的當範本）。"
     },
     {
       "id": "ios-005",
