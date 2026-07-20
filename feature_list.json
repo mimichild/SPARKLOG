@@ -83,8 +83,11 @@
         "執行 eas build --platform ios。",
         "確認 expo.dev 建置狀態 finished，記錄 build URL。"
       ],
-      "evidence": [],
-      "notes": "2026-07-20 blocked：ios-001～ios-003 皆已完成，唯一前置條件剩 Apple Developer Program（$99/年）尚未申請，需使用者決定是否付費申請。已嘗試：無需嘗試，純屬外部帳號申請前置。建議解法：使用者申請 Apple Developer Program 後再回來繼續；帳號未辦好前不要空等此項。本專案目前沒有 eas.json，需在申請帳號後一併建立（可參考 SPARKWEAR 的當範本）。"
+      "evidence": [
+        "2026-07-20 | 新增 eas.json（含 Node 22.13.0 修法）、npx eas-cli init | 建立 EAS 專案 @mimichild/sparknotes",
+        "2026-07-20 | npx eas-cli build --platform ios --profile production（互動模式）| 失敗：Apple 回報 bundle identifier com.sparknotes.app 不可用於這個開發者帳號（'An App ID with Identifier com.sparknotes.app is not available'），疑似與知名讀書筆記品牌 SparkNotes 撞名，bundle ID 是 Apple 全域唯一，不是帳號權限問題"
+      ],
+      "notes": "2026-07-20 blocked：唯一卡住的原因是 iOS bundle identifier com.sparknotes.app 被 Apple 判定不可用（全域唯一性衝突），跟 Apple Developer 帳號、程式碼、EAS 設定都無關。已嘗試：改成 com.sparkbook.app 驗證可行（未實際跑），但使用者決定先維持原本的 com.sparknotes.app，之後真的需要時再決定要不要改名或重試。建議解法：使用者決定好 bundle ID 策略（換一個唯一的 ID，或嘗試在 Apple Developer 後台申訴/確認是否真的無法使用）後回來繼續，在那之前不要空等此項。"
     },
     {
       "id": "ios-005",
