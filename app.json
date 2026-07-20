@@ -13,7 +13,9 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "ACCESS_BACKGROUND_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -22,12 +24,13 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "com.sparknotes.app",
+      "bundleIdentifier": "com.sparkbook.app",
       "infoPlist": {
         "NSLocationAlwaysAndWhenInUseUsageDescription": "需要定位權限以提供雷店接近提醒",
         "NSLocationWhenInUseUsageDescription": "需要定位權限以記錄店家位置",
         "UIFileSharingEnabled": true,
-        "LSSupportsOpeningDocumentsInPlace": true
+        "LSSupportsOpeningDocumentsInPlace": true,
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "web": {
@@ -48,6 +51,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "48b06465-1c6c-4b1f-a3df-3ad598f1e18b"
+      }
+    },
+    "owner": "mimichild"
   }
 }
