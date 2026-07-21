@@ -10,7 +10,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColor }]}>
-      <Text style={styles.title}>SPARK NOTE</Text>
+      <Text style={styles.title}>SPARK LOG</Text>
 
       <View style={styles.bottom}>
         <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/settings')}>

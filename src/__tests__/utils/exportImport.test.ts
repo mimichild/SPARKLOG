@@ -35,7 +35,7 @@ test('parseBackup throws on wrong version', () => {
 });
 
 test('photoFilename extracts the last path segment from a file URI', () => {
-  expect(photoFilename('file:///data/user/0/com.sparknotes.app/files/photos/abc.jpg')).toBe('abc.jpg');
+  expect(photoFilename('file:///data/user/0/com.sparklog.app/files/photos/abc.jpg')).toBe('abc.jpg');
 });
 
 test('photoFilename returns bare filenames unchanged', () => {

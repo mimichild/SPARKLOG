@@ -91,7 +91,7 @@ export default function SettingsScreen() {
       const zipBase64 = await buildBackupZip();
 
       const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
-        directoryUri, 'sparknotes-backup', 'application/zip',
+        directoryUri, 'sparklog-backup', 'application/zip',
       );
       await FileSystem.writeAsStringAsync(fileUri, zipBase64, { encoding: FileSystem.EncodingType.Base64 });
 
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
   // iOS 沒有 StorageAccessFramework（那是 Android 專屬的「選擇資料夾」機制），
   // 存到 documentDirectory：因為 app.json 開了 UIFileSharingEnabled +
   // LSSupportsOpeningDocumentsInPlace，這個資料夾會直接出現在「檔案」App
-  // 的「我的 iPhone > SPARKNOTES」裡，不必依賴分享面板「儲存到檔案」是否
+  // 的「我的 iPhone > SPARK LOG」裡，不必依賴分享面板「儲存到檔案」是否
   // 真的有成功（之前用 cacheDirectory + 分享面板時，使用者反應存了之後在
   // 「檔案」App 裡完全搜不到）。分享面板仍然保留，方便直接傳給別人。
   const runExportShare = async () => {
@@ -120,21 +120,21 @@ export default function SettingsScreen() {
       const zipBase64 = await buildBackupZip();
 
       const stamp = new Date().toISOString().slice(0, 10);
-      const fileUri = `${FileSystem.documentDirectory}sparknotes-backup-${stamp}.zip`;
+      const fileUri = `${FileSystem.documentDirectory}sparklog-backup-${stamp}.zip`;
       await FileSystem.writeAsStringAsync(fileUri, zipBase64, { encoding: FileSystem.EncodingType.Base64 });
 
       await finishProgress();
 
       Alert.alert(
         '匯出完成',
-        `備份已存到「檔案」App 的「我的 iPhone / SPARKNOTES」資料夾（sparknotes-backup-${stamp}.zip）。\n\n也可以在接下來的分享視窗選擇傳送給其他 App。`,
+        `備份已存到「檔案」App 的「我的 iPhone / SPARK LOG」資料夾（sparklog-backup-${stamp}.zip）。\n\n也可以在接下來的分享視窗選擇傳送給其他 App。`,
       );
 
       const available = await Sharing.isAvailableAsync();
       if (available) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/zip',
-          dialogTitle: 'SPARKNOTE 備份',
+          dialogTitle: 'SPARK LOG 備份',
         });
       }
     } catch {

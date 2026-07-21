@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "SPARKNOTES",
-    "slug": "sparknotes",
-    "scheme": "sparknotes",
+    "name": "SPARK LOG",
+    "slug": "sparklog",
+    "scheme": "sparklog",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "icon": "./assets/icon.png",
     "android": {
-      "package": "com.sparknotes.app",
+      "package": "com.sparklog.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
@@ -24,7 +24,7 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "com.sparknotes.app",
+      "bundleIdentifier": "com.sparklog.app",
       "infoPlist": {
         "NSLocationAlwaysAndWhenInUseUsageDescription": "需要定位權限以提供雷店接近提醒",
         "NSLocationWhenInUseUsageDescription": "需要定位權限以記錄店家位置",

@@ -4,7 +4,7 @@ let _db: SQLite.SQLiteDatabase | null = null;
 
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (_db) return _db;
-  _db = await SQLite.openDatabaseAsync('sparknotes.db');
+  _db = await SQLite.openDatabaseAsync('sparklog.db');
   await migrate(_db);
   return _db;
 }
