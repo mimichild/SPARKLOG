@@ -97,13 +97,15 @@
       "area": "ios",
       "title": "TestFlight 內部測試",
       "user_visible_behavior": "使用者的 iPhone 能從 TestFlight 安裝並正常使用核心功能（含真實定位）。",
-      "status": "not_started",
+      "status": "in_progress",
       "verification": [
         "eas submit --platform ios 並加入內部測試群組。",
         "實機安裝啟動，重跑 ios-002 核心流程。"
       ],
-      "evidence": [],
-      "notes": "依賴 ios-004。"
+      "evidence": [
+        "2026-07-21 | eas submit --platform ios --profile production --latest（使用者本人於 Terminal.app 互動執行）| Submission 成功，Build ID 6ac01601-2e58-4809-a87f-c74815011660（App Version 1.0.0, Build 2）已上傳，https://appstoreconnect.apple.com/apps/6793043374/testflight/ios"
+      ],
+      "notes": "依賴 ios-004。2026-07-21：已完成 eas submit，剩下加入內部測試群組＋實機驗證需等使用者有 iPhone 可測時才能做。"
     }
   ]
 }
