@@ -6,7 +6,7 @@
 
 ## 目前已驗證狀態
 
-- 儲存庫根目錄：/Users/mimi/Documents/SPARKNOTE
+- 儲存庫根目錄：/Users/mimi/Documents/SPARKLOG（2026-07-21 從 SPARKNOTE 改名，GitHub repo 與本機資料夾同步改名，git remote 已更新為 git@github.com:mimichild/SPARKLOG.git）
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-21 為 39 tests passed）
 - 目前最高優先級未完成功能：ios-005 TestFlight 內部測試
