@@ -11,9 +11,27 @@
 - 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-21 為 39 tests passed）
 - 目前最高優先級未完成功能：ios-005 TestFlight 內部測試
 - 目前 blocker：無
-- 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾改名成 SPARKLOG 是下一步；Expo SDK 56（其他四個專案是 54）；ios-001～ios-004 皆已 passing；雷達/預警功能已於 0c60085 移除
+- 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾也已同步改名成 SPARKLOG；Android APK 也已建置成功並修好三個實機才會踩到的問題（applicationId 未更新、大備份匯入 OOM、adaptive icon 圖層未更新，詳見工作階段 006）；Expo SDK 56（其他四個專案是 54）；ios-001～ios-004 皆已 passing；雷達/預警功能已於 0c60085 移除
 
 ## 工作階段日誌
+
+### 工作階段 006
+
+- 日期：2026-07-21
+- 本輪目標：使用者要把改名後的 SPARK LOG 建成 Android APK、上傳雲端硬碟、裝到實機，並把舊 SPARKNOTE 的資料遷移過去
+- 已完成：
+  - 用 `/build-apk` skill 建置 APK、上傳到 `SPARK-Builds/SPARKLOG/`
+  - **踩坑並修好三個實機才會暴露的問題**：
+    1. **APK 內部 applicationId 沒更新**：本機 `android/` 資料夾是改名前產生的舊版，`build.gradle` 寫死 `com.sparknotes.app`，改 `app.json` 不會自動同步（跟 iOS 的 `ios/` 資料夾是同一個道理）。用 `adb install` 裝上去後系統把它當成「更新舊 App」，資料庫檔名卻已經改成新的 `sparklog.db`，導致資料讀不到、匯入也失敗。修法：`npx expo prebuild --platform android` 重新產生（不需要 `--clean`，一般 prebuild 就會套用 app.json 的新設定；只有第一次修正 stale applicationId 那次因為要整個重新產生資料夾用了 `--clean`，之後改設定用一般 prebuild 就夠，速度快很多）
+    2. **匯入大備份檔案 OutOfMemoryError**：實測 43MB（146 家店、上百張照片）的備份檔匯入時，App 拋出 OOM（單次配置 58MB 超過預設 256MB heap 上限），使用者只看到籠統的「匯入失敗，請確認檔案是否正確」。用 `adb logcat` 才抓到真正的 OutOfMemoryError。修法：新增 `plugins/withAndroidLargeHeap.js`（`withAndroidManifest` mod）幫 `<application>` 加 `android:largeHeap="true"`
+    3. **Android adaptive icon 圖層沒更新**：改名時只換了 `assets/icon.png`（iOS 用），Android 的 `android-icon-foreground/background/monochrome.png` 三張圖層因為沒有分層素材沒有動，導致 Android 上圖示還是舊的「NOTE」設計。用 ImageMagick（`brew install imagemagick`）從新 icon.png 重新產生三張圖層，注意要用 **floodfill**（不是全域顏色替換 `-opaque`）去背，否則會把筆記本上同色系的「LOG」文字也一起挖空
+  - 全程用實機（Pixel 10）USB 連接 + `adb logcat` 抓真正的錯誤，不是憑空猜
+  - 使用者確認：資料匯入成功（148 家店）、圖示正常顯示
+- 執行過的驗證：`./init.sh`（39 tests passed）、實機安裝＋匯入＋圖示視覺確認
+- 已擷取證據：三個 commit（applicationId 修復不需要 commit，因為 `android/` 本身被 gitignore；largeHeap plugin 與 icon 圖層都已 commit 並 push）
+- 提交記錄：`c9e167d`（largeHeap）、`df053b5`（icon 圖層）
+- 已知風險或未解決問題：雲端硬碟 `SPARK-Builds/SPARKLOG/` 資料夾裡還留著兩份建置失敗過程中產生的舊 APK，使用者尚未決定要不要清掉；手機上殘留一個「殼子是舊 SPARKNOTE、UI 是新的但資料是空的」的混亂安裝，使用者尚未決定要不要移除
+- 下一步最佳動作：iOS 這邊還是卡在 ios-005（需要實體 iPhone）；Android 這條線目前沒有已知問題
 
 ### 工作階段 005
 
