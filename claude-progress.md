@@ -9,11 +9,24 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKLOG（2026-07-21 從 SPARKNOTE 改名，GitHub repo 與本機資料夾同步改名，git remote 已更新為 git@github.com:mimichild/SPARKLOG.git）
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-21 為 39 tests passed）
-- 目前最高優先級未完成功能：ios-005 TestFlight 內部測試（in_progress，已完成 eas submit，剩下加入測試群組＋實機驗證）
-- 目前 blocker：實機驗證步驟需要使用者的實體 iPhone 才能繼續
-- 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾也已同步改名成 SPARKLOG；Android APK 也已建置成功並修好三個實機才會踩到的問題（applicationId 未更新、大備份匯入 OOM、adaptive icon 圖層未更新，詳見工作階段 006）；Expo SDK 56（其他四個專案是 54）；ios-001～ios-004 皆已 passing；雷達/預警功能已於 0c60085 移除
+- 目前最高優先級未完成功能：無（feature_list.json 目前全部 passing）
+- 目前 blocker：無
+- 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾也已同步改名成 SPARKLOG；Android APK 也已建置成功並修好三個實機才會踩到的問題（applicationId 未更新、大備份匯入 OOM、adaptive icon 圖層未更新，詳見工作階段 006）；Expo SDK 56（其他四個專案是 54）；ios-001～ios-005 皆已 passing（含 TestFlight 實機驗證）；雷達/預警功能已於 0c60085 移除
 
 ## 工作階段日誌
+
+### 工作階段 008
+
+- 日期：2026-07-21
+- 本輪目標：完成 ios-005（TestFlight 內部測試）剩餘步驟——加入測試群組＋實機驗證
+- 已完成：
+  - 使用者於 App Store Connect 把 Build 2 加入內部測試群組，iPhone 用 TestFlight 成功安裝並開啟 SPARKLOG
+  - 實機重跑核心流程（新增店家紀錄、定位權限彈窗、關閉重開確認資料持久化），使用者確認「測試都沒問題」
+- 執行過的驗證：見上述，皆為使用者實機手動操作
+- 已擷取證據：見 feature_list.json ios-005 evidence
+- 提交記錄：（本輪 commit）
+- 已知風險或未解決問題：無
+- 下一步最佳動作：目前 feature_list.json 全部 passing，無待辦項目；有新需求再開新 feature
 
 ### 工作階段 007
 
