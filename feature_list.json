@@ -77,7 +77,7 @@
       "area": "ios",
       "title": "EAS iOS 雲端建置成功",
       "user_visible_behavior": "EAS Build 產出可安裝的 iOS build。",
-      "status": "blocked",
+      "status": "passing",
       "verification": [
         "確認 Apple Developer 帳號可用、建立 eas.json（參考 SPARKWEAR）。",
         "執行 eas build --platform ios。",
@@ -85,9 +85,11 @@
       ],
       "evidence": [
         "2026-07-20 | 新增 eas.json（含 Node 22.13.0 修法）、npx eas-cli init | 建立 EAS 專案 @mimichild/sparknotes",
-        "2026-07-20 | npx eas-cli build --platform ios --profile production（互動模式）| 失敗：Apple 回報 bundle identifier com.sparknotes.app 不可用於這個開發者帳號（'An App ID with Identifier com.sparknotes.app is not available'），疑似與知名讀書筆記品牌 SparkNotes 撞名，bundle ID 是 Apple 全域唯一，不是帳號權限問題"
+        "2026-07-20 | npx eas-cli build --platform ios --profile production（互動模式）| 失敗：Apple 回報 bundle identifier com.sparknotes.app 不可用於這個開發者帳號（'An App ID with Identifier com.sparknotes.app is not available'），疑似與知名讀書筆記品牌 SparkNotes 撞名，bundle ID 是 Apple 全域唯一，不是帳號權限問題",
+        "2026-07-21 | 使用者決定將 App 正式改名為 SPARK LOG，bundleIdentifier/package 改為 com.sparklog.app（見同日 commit 20d05b4）| ./init.sh 39 tests passed",
+        "2026-07-21 | npx eas-cli build --platform ios --profile production（互動模式，使用者本人建立新 bundle ID 的 Provisioning Profile）| All credentials are ready to build（Apple 接受 com.sparklog.app，確認撞名問題解決）；Build finished，產出 .ipa：https://expo.dev/artifacts/eas/GplJ-N8-O2m38HO8OHqQzzxfWEPU2qgVVhqydAtRBs8.ipa；建置頁：https://expo.dev/accounts/mimichild/projects/sparknotes/builds/6ac01601-2e58-4809-a87f-c74815011660"
       ],
-      "notes": "2026-07-20 blocked：唯一卡住的原因是 iOS bundle identifier com.sparknotes.app 被 Apple 判定不可用（全域唯一性衝突），跟 Apple Developer 帳號、程式碼、EAS 設定都無關。已嘗試：改成 com.sparkbook.app 驗證可行（未實際跑），但使用者決定先維持原本的 com.sparknotes.app，之後真的需要時再決定要不要改名或重試。建議解法：使用者決定好 bundle ID 策略（換一個唯一的 ID，或嘗試在 Apple Developer 後台申訴/確認是否真的無法使用）後回來繼續，在那之前不要空等此項。"
+      "notes": "2026-07-20 卡住的 bundle ID 撞名問題已於 2026-07-21 透過改名解決：App 顯示名稱改為「SPARK LOG」，bundleIdentifier/package 改為 com.sparklog.app，圖示也換成新設計。EAS 專案內部 slug 因為綁定既有 GitHub repo（尚未改名）仍顯示 sparknotes，純屬 EAS 內部識別碼，不影響任何實際功能。GitHub repo／本機資料夾改名為 SPARKLOG 是下一步。Android adaptive icon 的三張圖層（foreground/background/monochrome）仍是舊的「NOTE」設計，未來有分層素材時再補。"
     },
     {
       "id": "ios-005",

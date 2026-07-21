@@ -8,12 +8,28 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKNOTE
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-17 為 39 tests passed）
-- 目前最高優先級未完成功能：ios-004 EAS iOS 雲端建置成功（blocked：需先申請 Apple Developer Program 帳號）
-- 目前 blocker：ios-004/ios-005 需要 Apple Developer Program（$99/年），尚未申請
-- 背景：Expo SDK 56（其他四個專案是 54）；ios-001～ios-003 皆已 passing；雷達/預警功能已於 0c60085 移除
+- 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-21 為 39 tests passed）
+- 目前最高優先級未完成功能：ios-005 TestFlight 內部測試
+- 目前 blocker：無
+- 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾改名成 SPARKLOG 是下一步；Expo SDK 56（其他四個專案是 54）；ios-001～ios-004 皆已 passing；雷達/預警功能已於 0c60085 移除
 
 ## 工作階段日誌
+
+### 工作階段 005
+
+- 日期：2026-07-21
+- 本輪目標：解決 ios-004 卡住的 bundle ID 撞名問題
+- 已完成：
+  - 用 `/research` 調查改名「SPARK LOG」的完整範圍（app.json 識別碼、程式碼裡的文字、圖示、README、跨專案影響），確認沒有其他 SPARK App 連結到 SPARKNOTE
+  - 使用者確認要正式改名（不只是換技術識別碼），並提供做好的新圖示（「LOG」字樣，取代原本「NOTE」字樣）
+  - 改動：`app.json`（name/slug/scheme/package/bundleIdentifier）、`package.json` name、`app/index.tsx` 首頁標題、`app/settings.tsx` 備份檔名與分享文字、`src/db/database.ts` 資料庫檔名、`assets/icon.png`＋`assets/favicon.png`、`README.md`、`feature_list.json` 的 project 欄位
+  - `eas init` 重新連結（因為既有 EAS 專案綁定 GitHub repo，尚未改名前 slug 只能維持 sparknotes，純內部識別碼、不影響實際功能）
+  - `eas build --platform ios --profile production`（互動模式）：Apple 接受新 bundle ID `com.sparklog.app`，建置成功
+- 執行過的驗證：`./init.sh`（39 tests passed）、實際跑 EAS 雲端建置成功
+- 已擷取證據：見 feature_list.json ios-004 evidence，含 build URL 與 .ipa 下載連結
+- 提交記錄：（見本輪 commit，含 20d05b4 改名主要改動）
+- 已知風險或未解決問題：Android adaptive icon 三張圖層仍是舊的「NOTE」設計（沒有分層素材可換）；GitHub repo／本機資料夾尚未改名
+- 下一步最佳動作：GitHub repo／本機資料夾改名為 SPARKLOG；接著開始 ios-005（TestFlight 內部測試，需要實體 iPhone）
 
 ### 工作階段 004
 
