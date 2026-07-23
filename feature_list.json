@@ -115,7 +115,7 @@
       "area": "monetization",
       "title": "AdMob 橫幅廣告＋RevenueCat 訂閱＋Pro 功能鎖（複製 SPARKWEAR 範本）",
       "user_visible_behavior": "iOS 免費使用者：不限筆數，但不可選主題色、不可匯出匯入，點到這些功能會跳出升級提示；首頁、三個分頁（紀錄/分類/排行，掛在分頁列下方共用一條）底部能看到橫幅廣告。iOS Pro 使用者（RevenueCat 訂閱，或按「恢復購買」）：一樣不限筆數，主題色/匯出匯入解鎖、無廣告。Android：沒有付費入口，一律視為 Pro，全部功能免費開放、不顯示廣告。",
-      "status": "in_progress",
+      "status": "passing",
       "verification": [
         "pnpm test 全部通過（含新增 useIsPro.test.ts/useProGate.test.ts/purchases.test.ts）。",
         "npx tsc --noEmit -p . 無新增型別錯誤。",
@@ -127,7 +127,8 @@
         "2026-07-23 | ./init.sh | 56 tests passed（含新增 useIsPro.test.ts 3 項、useProGate.test.ts 3 項、purchases.test.ts 11 項）",
         "2026-07-23 | npx tsc --noEmit -p . | 無錯誤",
         "2026-07-23 | npx expo prebuild --platform ios && pod install | RNGoogleMobileAds 16.3.4、RevenueCat 5.81.1 成功安裝",
-        "2026-07-23 | npx expo run:ios 建置成功（0 error，中途排除一個過期的 Swift module cache 問題後成功）並在 iPhone 17 Pro 模擬器實測 | 首頁正常顯示且能看到 AdMob 測試廣告"
+        "2026-07-23 | npx expo run:ios 建置成功（0 error，中途排除一個過期的 Swift module cache 問題後成功）並在 iPhone 17 Pro 模擬器實測 | 首頁正常顯示且能看到 AdMob 測試廣告",
+        "2026-07-23 | 使用者在模擬器測試 | 使用者確認「沒問題」"
       ],
       "notes": "對應 monetization_spec_5_apps 記憶；複製 SPARKWEAR/SPARKPLATE/SPARKSHAPE/SPARKFIT 的 useProGate/useIsPro/AdBanner/purchases.ts/monetization.ts 範本。react-native-google-mobile-ads 直接鎖定 16.3.4（Kotlin 版本天花板問題，見 SPARKWEAR feedback_android_native_stale_config 記憶規則五）。這個 App 用 src/store/settingsStore.ts（單數 store，非 stores，是這個專案既有的命名慣例，不是打錯字），有獨立的 app/settings.tsx 路由，升級提示直接 router.push('/settings')。settingsStore 用 zustand persist middleware，setProUnlocked 是同步函式。分頁列（app/main/_layout.tsx）原本完全沒設定明確高度（icon 也是 null），套用跟 SPARKWEAR 一樣的修法：固定高度 50、lineHeight 對齊做文字垂直置中。寫測試時意外發現這個專案的 @testing-library/react-native 14.x 版本要求 render/renderHook/act 全部要 await（見 feedback_sparklog_testing_library_async 記憶），不 await 會讓 result 變成 undefined/null，錯誤訊息完全看不出原因，找了一陣子才用最小重現案例排除掉。建置過程中也發現並修好一個跟付費功能無關的既有問題：這個專案資料夾以前叫 SPARKNOTE，改名成 SPARKLOG 之後，node_modules/expo-modules-jsi/apple/.DerivedData 底下殘留一份用舊路徑（/Users/mimi/Documents/SPARKNOTE/...）編譯出來的 Swift module cache，導致第一次建置直接失敗（`missing required module 'SwiftShims'`）；刪掉這個過期快取資料夾後重建即正常，這是一次性問題，不會再發生（除非又整個資料夾改名）。模擬器上確認過首頁正常渲染、AdMob 測試廣告有載入，但「設定」入口這次連續兩次都點不準座標（跟 SPARKFIT 遇到的狀況類似），沒能實際打開設定頁驗證個別鎖點；只有單元測試佐證（測的是跟其他四個 App 完全相同、已經被人工驗證過的 requirePro 邏輯）。待使用者有空自己在模擬器/實機測一輪確認後改 passing。"
     }
