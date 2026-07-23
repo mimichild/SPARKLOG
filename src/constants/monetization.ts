@@ -2,10 +2,13 @@ import { Platform } from 'react-native';
 import { TestIds } from 'react-native-google-mobile-ads';
 
 // ── AdMob ────────────────────────────────────────────────────────
-// 目前用 Google 官方公開的測試廣告單元 ID（react-native-google-mobile-ads 的
-// TestIds），申請到正式 AdMob 帳號、拿到真正的廣告單元 ID 後，把下面這組
-// BANNER_AD_UNIT_ID 換成正式 ID 即可，其餘程式碼不用改。
-export const BANNER_AD_UNIT_ID = TestIds.BANNER;
+// iOS 用正式廣告單元 ID；Android 一律視為 Pro（AdBanner 不會渲染，見
+// useIsPro.ts），維持 Google 測試 ID 即可，不需要申請真的 Android 版位。
+export const BANNER_AD_UNIT_ID = Platform.select({
+  ios: 'ca-app-pub-8914492142878610/7243404039',
+  android: TestIds.BANNER,
+  default: TestIds.BANNER,
+}) ?? TestIds.BANNER;
 
 // ── RevenueCat ───────────────────────────────────────────────────
 // 申請好 RevenueCat 帳號、建立好 App 之後，把下面這個 Public API Key 換成

@@ -9,12 +9,21 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKLOG（2026-07-21 從 SPARKNOTE 改名，GitHub repo 與本機資料夾同步改名，git remote 已更新為 git@github.com:mimichild/SPARKLOG.git）
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-23 為 56 tests passed）
-- monetization-001：passing（2026-07-23，使用者實機逐一測試個別鎖點確認無誤）；分頁列底部安全區已改成依「有無廣告」動態計算（見工作階段 010）；AdMob 真實 iOS App ID 已設定（ca-app-pub-8914492142878610~8412301462），廣告單元 ID 待提供；Android 維持 Google 測試 ID
+- monetization-001：passing（2026-07-23，使用者實機逐一測試個別鎖點確認無誤）；分頁列底部安全區已改成依「有無廣告」動態計算（見工作階段 010）；AdMob 真實 iOS App ID（ca-app-pub-8914492142878610~8412301462）與廣告單元 ID（ca-app-pub-8914492142878610/7243404039）皆已設定；Android 維持 Google 測試 ID；待辦：跑一次原生 build 讓新 ID 生效、之後設定 RevenueCat
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
 - 目前 blocker：無
 - 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾也已同步改名成 SPARKLOG；Android APK 也已建置成功並修好三個實機才會踩到的問題（applicationId 未更新、大備份匯入 OOM、adaptive icon 圖層未更新，詳見工作階段 006）；Expo SDK 56（其他四個專案是 54）；ios-001～ios-005 皆已 passing（含 TestFlight 實機驗證）；雷達/預警功能已於 0c60085 移除
 
 ## 工作階段日誌
+
+### 工作階段 012
+
+- 日期：2026-07-23
+- 本輪目標：使用者在 AdMob 後台建好橫幅廣告單元，把測試版位換成正式的
+- 已完成：`src/constants/monetization.ts` 的 `BANNER_AD_UNIT_ID` 改成 `Platform.select`，iOS 用正式 ID `ca-app-pub-8914492142878610/7243404039`，Android 維持 `TestIds.BANNER`
+- 執行過的驗證：`npx tsc --noEmit`（無新增錯誤）；`npx jest`（11 suites、56 tests 全過）
+- 已知風險或未解決問題：需要重新原生 build 才會真正生效；AdMob 應用程式狀態目前是「需審核」
+- 下一步最佳動作：找時間跑一次原生 build 讓新 ID 生效；之後設定 RevenueCat
 
 ### 工作階段 011
 
