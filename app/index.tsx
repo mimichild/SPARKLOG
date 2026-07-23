@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
+import { AdBanner } from '@/components/AdBanner';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,6 +24,8 @@ export default function HomeScreen() {
         >
           <Text style={[styles.startBtnText, { color: themeColor }]}>開始使用</Text>
         </TouchableOpacity>
+
+        <AdBanner />
       </View>
     </SafeAreaView>
   );

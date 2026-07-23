@@ -12,6 +12,9 @@ import { getAllCategories, insertCategory, deleteAllCategories } from '@/db/cate
 import { serializeBackup, parseBackup, photoFilename, stripPhotoPaths, resolvePhotoPaths } from '@/utils/exportImport';
 import { createBackupZip, extractBackupZip } from '@/utils/backupZip';
 import { PHOTOS_DIR, ensurePhotosDir, deletePhotoFiles } from '@/utils/photoStorage';
+import { useProGate } from '@/hooks/useProGate';
+import { AdBanner } from '@/components/AdBanner';
+import { purchasePro, restorePurchases } from '@/services/purchases';
 import type { Store, Category } from '@/types';
 
 function getFriendlyFolderName(directoryUri: string): string {
@@ -31,12 +34,15 @@ const PRESET_COLORS = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { themeColor, setThemeColor } = useSettingsStore();
+  const { themeColor, setThemeColor, setProUnlocked } = useSettingsStore();
+  const { isProUnlocked, requirePro } = useProGate();
   const [customHex, setCustomHex] = useState('');
   const [progressModalVisible, setProgressModalVisible] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState('');
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   const startProgress = (label: string) => {
     setProgress(0);
@@ -60,12 +66,41 @@ export default function SettingsScreen() {
   };
 
   const handleApplyCustomHex = () => {
+    if (!requirePro('主題色')) return;
     const hex = customHex.trim();
     if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
       Alert.alert('色碼格式錯誤', '請輸入正確的色碼，例如 #ff0000');
       return;
     }
     setThemeColor(hex);
+  };
+
+  const handlePurchase = async () => {
+    setPurchasing(true);
+    try {
+      const isPro = await purchasePro();
+      if (isPro) {
+        setProUnlocked(true);
+        Alert.alert('升級成功', 'Pro 功能已啟用');
+      }
+    } catch (e) {
+      Alert.alert('升級失敗', e instanceof Error ? e.message : '請稍後再試');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setRestoring(true);
+    try {
+      const isPro = await restorePurchases();
+      setProUnlocked(isPro);
+      Alert.alert(isPro ? '還原成功' : '沒有找到可還原的購買紀錄', isPro ? 'Pro 功能已啟用' : '若你曾經購買過，請確認使用的是同一個 Apple ID');
+    } catch (e) {
+      Alert.alert('還原失敗', e instanceof Error ? e.message : '請稍後再試');
+    } finally {
+      setRestoring(false);
+    }
   };
 
   const buildBackupZip = async () => {
@@ -144,6 +179,7 @@ export default function SettingsScreen() {
   };
 
   const handleExport = async () => {
+    if (!requirePro('匯出備份')) return;
     if (Platform.OS !== 'android') {
       Alert.alert(
         '匯出備份',
@@ -167,6 +203,7 @@ export default function SettingsScreen() {
   };
 
   const handleImport = async () => {
+    if (!requirePro('匯入備份')) return;
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'],
     });
@@ -267,13 +304,34 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
+        <Text style={styles.section}>PRO 解鎖</Text>
+        {Platform.OS === 'android' ? (
+          <Text style={styles.proBadge}>✓ Pro 已解鎖（Android 版全功能免費開放）</Text>
+        ) : isProUnlocked ? (
+          <Text style={styles.proBadge}>✓ Pro 已解鎖</Text>
+        ) : (
+          <View style={{ marginBottom: 8 }}>
+            <Text style={styles.subLabel}>升級 Pro 即可解鎖主題色、匯出匯入，並移除廣告</Text>
+            <TouchableOpacity
+              style={[styles.exportBtn, { backgroundColor: themeColor, marginTop: 10 }]}
+              onPress={handlePurchase}
+              disabled={purchasing}
+            >
+              <Text style={styles.exportBtnText}>{purchasing ? '處理中…' : '升級 Pro'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleRestore} disabled={restoring} style={{ alignItems: 'center', paddingVertical: 6 }}>
+              <Text style={{ color: themeColor, fontSize: 13, fontWeight: '600' }}>{restoring ? '還原中…' : '恢復購買'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <Text style={styles.section}>主題色</Text>
         <View style={styles.colorGrid}>
           {PRESET_COLORS.map((c) => (
             <TouchableOpacity
               key={c}
               style={[styles.colorDot, { backgroundColor: c }, themeColor === c && styles.colorDotActive]}
-              onPress={() => setThemeColor(c)}
+              onPress={() => { if (!requirePro('主題色')) return; setThemeColor(c); }}
             >
               {themeColor === c && <Text style={styles.colorCheck}>✓</Text>}
             </TouchableOpacity>
@@ -307,6 +365,8 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.dangerBtn} onPress={handleClearAllStores}>
           <Text style={styles.dangerBtnText}>清除所有店家資料</Text>
         </TouchableOpacity>
+
+        <AdBanner />
       </ScrollView>
 
       <Modal visible={progressModalVisible} transparent animationType="fade">
@@ -335,6 +395,7 @@ const styles = StyleSheet.create({
   body: { padding: 20, paddingBottom: 60 },
   section: { color: '#0f172a', fontSize: 15, fontWeight: '700', marginTop: 24, marginBottom: 12 },
   subLabel: { color: '#64748b', fontSize: 12, marginTop: 12, marginBottom: 8 },
+  proBadge: { fontSize: 15, fontWeight: '600', color: '#43a047', marginBottom: 12 },
   colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   colorDot: {
     width: 40, height: 40, borderRadius: 20,

@@ -8,12 +8,31 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKLOG（2026-07-21 從 SPARKNOTE 改名，GitHub repo 與本機資料夾同步改名，git remote 已更新為 git@github.com:mimichild/SPARKLOG.git）
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-21 為 39 tests passed）
-- 目前最高優先級未完成功能：無（feature_list.json 目前全部 passing）
+- 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-23 為 56 tests passed）
+- 目前最高優先級未完成功能：monetization-001（in_progress）——AdMob＋RevenueCat＋Pro 功能鎖，複製自其他四個 App 的範本；build/tsc/單元測試都過，模擬器上確認過首頁與廣告，但「設定」入口這次點不準座標，個別鎖點還沒實際驗證過，待使用者測一輪
 - 目前 blocker：無
 - 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾也已同步改名成 SPARKLOG；Android APK 也已建置成功並修好三個實機才會踩到的問題（applicationId 未更新、大備份匯入 OOM、adaptive icon 圖層未更新，詳見工作階段 006）；Expo SDK 56（其他四個專案是 54）；ios-001～ios-005 皆已 passing（含 TestFlight 實機驗證）；雷達/預警功能已於 0c60085 移除
 
 ## 工作階段日誌
+
+### 工作階段 009
+
+- 日期：2026-07-23
+- 本輪目標：複製其他四個 SPARK App 的付費功能範本到 SPARKLOG（monetization-001，5 個 App 的最後一個）
+- 已完成：
+  - 安裝 `react-native-google-mobile-ads`（鎖定 16.3.4）與 `react-native-purchases`
+  - 新增 `src/constants/monetization.ts`、`src/services/purchases.ts`、`src/hooks/useIsPro.ts`、`src/hooks/useProGate.ts`、`src/components/AdBanner.tsx`
+  - `src/store/settingsStore.ts`（zustand persist middleware）加 `isProUnlocked`/`setProUnlocked`；有獨立的 `app/settings.tsx` 路由，升級提示直接 `router.push('/settings')`
+  - 主題色/匯出/匯入接上 `requirePro` 鎖，加 PRO 解鎖區塊（升級 Pro／恢復購買）
+  - 廣告放置：首頁、三個分頁（掛在 `app/main/_layout.tsx` 共用一條；這個分頁列原本完全沒設定明確高度，套用跟 SPARKWEAR 一樣的固定高度 50＋lineHeight 置中修法）
+  - 寫測試時發現這個專案的 `@testing-library/react-native` 是 14.x 版本，`render`/`renderHook`/`act` 全部要 `await` 才會正常運作（不 await 會讓 `result` 變成 `undefined`/`null`，錯誤訊息完全看不出跟這個有關），用最小重現案例（`renderHook(() => useState(0))`）才排除掉，寫進 `feedback_sparklog_testing_library_async` 記憶避免下次又卡住
+  - 新增對應單元測試，56 tests 全過；`npx tsc --noEmit -p .` 完全無錯誤
+  - `npx expo prebuild --platform ios && pod install` 成功；第一次 `npx expo run:ios` 建置失敗，錯誤是 `missing required module 'SwiftShims'`——根因是這個資料夾以前叫 SPARKNOTE 改名成 SPARKLOG，`node_modules/expo-modules-jsi/apple/.DerivedData` 底下殘留一份用舊路徑編譯的 Swift module cache；刪掉這個過期快取資料夾後重新建置成功，首頁正常顯示、AdMob 測試廣告有載入
+- 執行過的驗證：`./init.sh`（56 tests passed）、`npx tsc --noEmit -p .`（無錯誤）、模擬器手動操作（僅確認首頁與廣告；進入設定頁測試個別鎖點時連續兩次都點不準座標，沒能完成，跟 SPARKFIT 那輪遇到類似狀況）
+- 已擷取證據：見 feature_list.json monetization-001 evidence
+- 提交記錄：（見本輪 commit）
+- 已知風險或未解決問題：個別鎖點（主題色/匯出/匯入的升級提示、恢復購買、Android 全功能開放、三個分頁的廣告位置）都還沒實際點過確認，只有單元測試佐證
+- 下一步最佳動作：使用者有空時自己測一輪 SPARKSHAPE/SPARKFIT/SPARKLOG 剩下的個別鎖點（SPARKPLATE 已經使用者確認過）→ 5 個 App 的 monetization-001 全部改 passing，這個階段的付費功能主線工作即完成
 
 ### 工作階段 008
 
