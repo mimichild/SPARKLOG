@@ -9,11 +9,21 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKLOG（2026-07-21 從 SPARKNOTE 改名，GitHub repo 與本機資料夾同步改名，git remote 已更新為 git@github.com:mimichild/SPARKLOG.git）
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm exec jest；2026-07-23 為 56 tests passed）
-- 目前最高優先級未完成功能：monetization-001（in_progress）——AdMob＋RevenueCat＋Pro 功能鎖，複製自其他四個 App 的範本；build/tsc/單元測試都過，模擬器上確認過首頁與廣告，但「設定」入口這次點不準座標，個別鎖點還沒實際驗證過，待使用者測一輪
+- monetization-001：passing（2026-07-23，使用者實機逐一測試個別鎖點確認無誤）；分頁列底部安全區已改成依「有無廣告」動態計算（見工作階段 010）
+- 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
 - 目前 blocker：無
 - 背景：**App 已於 2026-07-21 正式改名為「SPARK LOG」**，解決了 bundleIdentifier com.sparknotes.app 撞名（疑似跟 SparkNotes 品牌衝突）導致 ios-004 卡住的問題，改成 com.sparklog.app 後建置成功；GitHub repo／本機資料夾也已同步改名成 SPARKLOG；Android APK 也已建置成功並修好三個實機才會踩到的問題（applicationId 未更新、大備份匯入 OOM、adaptive icon 圖層未更新，詳見工作階段 006）；Expo SDK 56（其他四個專案是 54）；ios-001～ios-005 皆已 passing（含 TestFlight 實機驗證）；雷達/預警功能已於 0c60085 移除
 
 ## 工作階段日誌
+
+### 工作階段 010
+
+- 日期：2026-07-23
+- 本輪目標：分頁列底部安全區改成依「有沒有廣告」動態決定（跟 SPARKWEAR/SPARKPLATE/SPARKFIT/SPARKSHAPE 同步處理）
+- 已完成：`app/main/_layout.tsx` 加 `useSafeAreaInsets()` + `useIsPro()`，`bottomInset = isPro ? insets.bottom : 0`，動態加到 `tabBarStyle.height`/`paddingBottom`；三個分頁畫面（categories/rankings/records）原本就用 `edges={['top']}`（bottom 已排除），沒有重複扣打問題，不用額外修
+- 執行過的驗證：`npx tsc --noEmit`（無錯誤）；`npx jest`（11 suites、56 tests 全過）
+- 已知風險或未解決問題：Pro（無廣告）分支目前無法在模擬器上實測（RevenueCat 尚未設定金鑰），邏輯依賴標準 `useSafeAreaInsets()` 疊加，未做額外模擬器驗證
+- 下一步最佳動作：下次工作階段開始時照常從 feature_list.json 選下一個 not_started 功能
 
 ### 工作階段 009
 
